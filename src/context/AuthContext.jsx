@@ -35,6 +35,16 @@ export function AuthProvider({ children }) {
 
   const [magicLinkSent, setMagicLinkSent] = useState(false)
 
+  const signInWithGoogle = async () => {
+    if (!supabase) return { error: 'Not configured' }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+    if (error) console.error('[Supabase] Google sign-in error:', error.message)
+    return { error: error?.message || null }
+  }
+
   const signInWithEmail = async (email) => {
     if (!supabase) {
       console.warn('[Supabase] Cannot sign in — Supabase is not configured.')
@@ -58,7 +68,7 @@ export function AuthProvider({ children }) {
     if (error) console.error('[Supabase] Sign-out error:', error.message)
   }
 
-  const value = { user, loading, magicLinkSent, setMagicLinkSent, signInWithEmail, signOut }
+  const value = { user, loading, magicLinkSent, setMagicLinkSent, signInWithGoogle, signInWithEmail, signOut }
 
   return (
     <AuthContext.Provider value={value}>
