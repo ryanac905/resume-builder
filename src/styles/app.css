@@ -1,0 +1,141 @@
+/* ============================================
+   app.css — Global styles & split-pane layout
+   ============================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Split pane layout */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ---- Shared button styles ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(37,99,235,0.3);
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+  box-shadow: 0 2px 6px rgba(37,99,235,0.4);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #64748b;
+  border: 1.5px solid #cbd5e1;
+}
+
+.btn-ghost:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.btn-add-entry {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1.5px dashed #86efac;
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 8px;
+  font-size: 13px;
+}
+
+.btn-add-entry:hover {
+  background: #dcfce7;
+  border-color: #4ade80;
+}
+
+.btn-add-bullet {
+  background: #f8fafc;
+  color: #475569;
+  border: 1.5px dashed #cbd5e1;
+  font-size: 12px;
+  padding: 5px 10px;
+  margin-top: 4px;
+}
+
+.btn-add-bullet:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-remove {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn-remove:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.btn-remove-bullet {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px;
+  border-radius: 3px;
+  line-height: 1;
+  align-self: flex-start;
+  margin-top: 2px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.btn-remove-bullet:hover {
+  color: #ef4444;
+}
+
+.btn-remove-bullet:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
