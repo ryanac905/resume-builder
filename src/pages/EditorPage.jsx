@@ -1,8 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '../components/Editor';
 import Preview from '../components/Preview';
-import { useResumeData } from '../hooks/useResumeData';
+import { useResumeData, loadAllCVs } from '../hooks/useResumeData';
+import { useAuth } from '../context/AuthContext';
+import { useCloudSync } from '../hooks/useCloudSync';
 import '../styles/app.css';
 import '../styles/editor.css';
 import '../styles/preview.css';
@@ -12,6 +14,27 @@ export default function EditorPage() {
   const navigate = useNavigate();
   const resumeData = useResumeData(id);
   const previewRef = useRef(null);
+  const { user } = useAuth();
+  const { saveCV } = useCloudSync();
+
+  // After every change (data or template), push to cloud if logged in.
+  // We use a ref to debounce the cloud save separately from localStorage save.
+  const cloudSaveTimer = useRef(null);
+
+  useEffect(() => {
+    if (!user) return;
+    if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current);
+    cloudSaveTimer.current = setTimeout(() => {
+      // Read the freshly-saved localStorage record (written by useResumeData)
+      const cvs = loadAllCVs() || {};
+      const cv = cvs[id];
+      if (cv) saveCV(user.id, cv);
+    }, 1000); // 1 s after the local 500 ms debounce settles
+
+    return () => {
+      if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current);
+    };
+  }, [resumeData.data, resumeData.template, user, id, saveCV]);
 
   const handleDownloadPdf = async () => {
     const element = previewRef.current;

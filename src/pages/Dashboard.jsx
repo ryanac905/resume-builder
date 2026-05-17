@@ -10,6 +10,8 @@ import {
   deleteCV,
   setLastActiveId,
 } from '../hooks/useResumeData';
+import { useAuth } from '../context/AuthContext';
+import { useCloudSync } from '../hooks/useCloudSync';
 import '../styles/dashboard.css';
 
 const TEMPLATE_META = {
@@ -184,14 +186,128 @@ function RenameModal({ id, initialName, onConfirm, onCancel }) {
   );
 }
 
+// ---- Auth header widget ----
+function AuthWidget({ user, isSyncing, lastSynced, onSignOut, onManualSync }) {
+  const { signInWithEmail, magicLinkSent, setMagicLinkSent } = useAuth();
+  const [email, setEmail] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  if (!user) {
+    if (magicLinkSent) {
+      return (
+        <div className="auth-magic-sent">
+          <span>📧 Check your email for a sign-in link!</span>
+          <button className="auth-signout" onClick={() => { setMagicLinkSent(false); setShowForm(false); }}>Dismiss</button>
+        </div>
+      );
+    }
+    if (showForm) {
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSending(true);
+        setErrorMsg('');
+        const { error } = await signInWithEmail(email);
+        setSending(false);
+        if (error) setErrorMsg(error);
+      };
+      return (
+        <form className="auth-email-form" onSubmit={handleSubmit}>
+          <input
+            className="auth-email-input"
+            type="email"
+            placeholder="your@email.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            autoFocus
+          />
+          <button className="auth-btn" type="submit" disabled={sending}>
+            {sending ? 'Sending...' : 'Send link'}
+          </button>
+          <button type="button" className="auth-signout" onClick={() => setShowForm(false)}>Cancel</button>
+          {errorMsg && <span className="auth-error">{errorMsg}</span>}
+        </form>
+      );
+    }
+    return (
+      <button className="auth-btn" onClick={() => setShowForm(true)} title="Sign in to sync your CVs to the cloud">
+        ☁ Sign in to save online
+      </button>
+    );
+  }
+
+  const avatar = user.user_metadata?.avatar_url;
+  const userEmail = user.email || user.user_metadata?.email || '';
+  const initials = userEmail ? userEmail[0].toUpperCase() : '?';
+
+  return (
+    <div className="auth-user">
+      {avatar ? (
+        <img className="auth-avatar" src={avatar} alt={userEmail} referrerPolicy="no-referrer" />
+      ) : (
+        <div className="auth-avatar auth-avatar-initials">{initials}</div>
+      )}
+      <span className="auth-email">{userEmail}</span>
+      <button
+        className="auth-sync-btn"
+        onClick={onManualSync}
+        disabled={isSyncing}
+        title="Sync now"
+      >
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ animation: isSyncing ? 'spin 1s linear infinite' : 'none' }}
+        >
+          <polyline points="23 4 23 10 17 10"/>
+          <polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+      </button>
+      {lastSynced && (
+        <span className="sync-status">
+          {isSyncing ? '☁ Syncing...' : `☁ Synced ${relativeTime(lastSynced.toISOString())}`}
+        </span>
+      )}
+      {isSyncing && !lastSynced && (
+        <span className="sync-status">☁ Syncing...</span>
+      )}
+      <button className="auth-signout" onClick={onSignOut}>Sign out</button>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [cvs, setCVs] = useState(() => initializeCVs());
-  const [renaming, setRenaming] = useState(null); // { id, name }
+  const [renaming, setRenaming] = useState(null);
+  const { user, signOut } = useAuth();
+  const { isSyncing, lastSynced, syncFromCloud, syncToCloud, saveCV, deleteCloudCV } = useCloudSync();
 
   const refresh = useCallback(() => {
     setCVs({ ...(loadAllCVs() || {}) });
   }, []);
+
+  // On login: pull CVs from cloud, merge, then push local ones up
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      await syncFromCloud(user.id);
+      refresh();
+      // After merge, push everything to cloud
+      const merged = loadAllCVs() || {};
+      await syncToCloud(user.id, merged);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const handleOpen = useCallback(
     (id) => {
@@ -201,28 +317,31 @@ export default function Dashboard() {
     [navigate]
   );
 
-  const handleCreateNew = useCallback(() => {
+  const handleCreateNew = useCallback(async () => {
     const name = 'Untitled CV';
     const cv = createCV(name);
+    if (user) await saveCV(user.id, cv);
     navigate(`/editor/${cv.id}`);
-  }, [navigate]);
+  }, [navigate, user, saveCV]);
 
   const handleDuplicate = useCallback(
-    (id) => {
-      duplicateCV(id);
+    async (id) => {
+      const copy = duplicateCV(id);
       refresh();
+      if (user && copy) await saveCV(user.id, copy);
     },
-    [refresh]
+    [refresh, user, saveCV]
   );
 
   const handleDelete = useCallback(
-    (id, name) => {
+    async (id, name) => {
       if (window.confirm(`Delete "${name}"? This cannot be undone.`)) {
         deleteCV(id);
         refresh();
+        if (user) await deleteCloudCV(user.id, id);
       }
     },
-    [refresh]
+    [refresh, user, deleteCloudCV]
   );
 
   const handleRenameStart = useCallback((id, name) => {
@@ -230,13 +349,27 @@ export default function Dashboard() {
   }, []);
 
   const handleRenameConfirm = useCallback(
-    (id, name) => {
+    async (id, name) => {
       renameCV(id, name);
       setRenaming(null);
       refresh();
+      if (user) {
+        const updatedCVs = loadAllCVs() || {};
+        const cv = updatedCVs[id];
+        if (cv) await saveCV(user.id, cv);
+      }
     },
-    [refresh]
+    [refresh, user, saveCV]
   );
+
+  const handleManualSync = useCallback(async () => {
+    if (!user) return;
+    await syncFromCloud(user.id);
+    refresh();
+    const merged = loadAllCVs() || {};
+    await syncToCloud(user.id, merged);
+    refresh();
+  }, [user, syncFromCloud, syncToCloud, refresh]);
 
   const cvList = Object.values(cvs).sort(
     (a, b) => new Date(b.lastEdited) - new Date(a.lastEdited)
@@ -257,12 +390,22 @@ export default function Dashboard() {
             </svg>
             <span className="dashboard-logo-text">Resume Builder</span>
           </div>
-          <button className="dashboard-create-btn" onClick={handleCreateNew}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Create New CV
-          </button>
+
+          <div className="dashboard-header-right">
+            <AuthWidget
+              user={user}
+              isSyncing={isSyncing}
+              lastSynced={lastSynced}
+              onSignOut={signOut}
+              onManualSync={handleManualSync}
+            />
+            <button className="dashboard-create-btn" onClick={handleCreateNew}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Create New CV
+            </button>
+          </div>
         </div>
       </header>
 
