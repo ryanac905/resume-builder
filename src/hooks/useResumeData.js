@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const DEFAULT_DATA = {
+export const DEFAULT_DATA = {
   personalInfo: {
     firstName: 'Alex',
     lastName: 'Johnson',
@@ -43,14 +43,15 @@ const DEFAULT_DATA = {
     {
       id: '1',
       school: 'University of California, Berkeley',
-      degree: "Bachelor of Science",
+      degree: 'Bachelor of Science',
       field: 'Computer Science',
       startDate: '2014',
       endDate: '2018',
       gpa: '3.8',
     },
   ],
-  skills: 'React, TypeScript, Node.js, Python, PostgreSQL, Redis, Docker, Kubernetes, AWS, GraphQL, REST APIs, Git',
+  skills:
+    'React, TypeScript, Node.js, Python, PostgreSQL, Redis, Docker, Kubernetes, AWS, GraphQL, REST APIs, Git',
   projects: [
     {
       id: '1',
@@ -69,102 +70,261 @@ const DEFAULT_DATA = {
   ],
 };
 
-const STORAGE_KEY = 'resume-builder-data';
+const BLANK_DATA = {
+  personalInfo: {
+    firstName: '',
+    lastName: '',
+    title: '',
+    email: '',
+    phone: '',
+    location: '',
+    linkedin: '',
+    website: '',
+  },
+  summary: '',
+  experience: [],
+  education: [],
+  skills: '',
+  projects: [],
+};
+
+const CVS_STORAGE_KEY = 'resume-builder-cvs';
+const LAST_ACTIVE_KEY = 'resume-builder-last-active';
 
 function generateId() {
-  return Math.random().toString(36).substr(2, 9);
+  return 'cv_' + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9));
 }
 
-export function useResumeData() {
-  const [data, setData] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.resumeData || DEFAULT_DATA;
+function generateItemId() {
+  return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9);
+}
+
+// ── Storage helpers ──────────────────────────────────────────────────────────
+
+export function loadAllCVs() {
+  try {
+    const raw = localStorage.getItem(CVS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Validate it's a plain object
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed;
       }
-    } catch (e) {
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+export function saveAllCVs(cvs) {
+  try {
+    localStorage.setItem(CVS_STORAGE_KEY, JSON.stringify(cvs));
+  } catch {
+    // ignore
+  }
+}
+
+export function getLastActiveId() {
+  try {
+    return localStorage.getItem(LAST_ACTIVE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+export function setLastActiveId(id) {
+  try {
+    localStorage.setItem(LAST_ACTIVE_KEY, id);
+  } catch {
+    // ignore
+  }
+}
+
+// ── Multi-CV CRUD helpers ────────────────────────────────────────────────────
+
+export function initializeCVs() {
+  let cvs = loadAllCVs();
+  if (!cvs || Object.keys(cvs).length === 0) {
+    // Check for legacy single-CV storage
+    try {
+      const legacy = localStorage.getItem('resume-builder-data');
+      if (legacy) {
+        const parsed = JSON.parse(legacy);
+        const legacyData = parsed.resumeData || DEFAULT_DATA;
+        const legacyTemplate = parsed.template || 'modern';
+        const id = generateId();
+        cvs = {
+          [id]: {
+            id,
+            name: 'My First CV',
+            template: legacyTemplate,
+            lastEdited: new Date().toISOString(),
+            data: legacyData,
+          },
+        };
+        localStorage.removeItem('resume-builder-data');
+        saveAllCVs(cvs);
+        setLastActiveId(id);
+        return cvs;
+      }
+    } catch {
       // ignore
     }
-    return DEFAULT_DATA;
+
+    // No legacy data — create default
+    const id = generateId();
+    cvs = {
+      [id]: {
+        id,
+        name: 'My First CV',
+        template: 'modern',
+        lastEdited: new Date().toISOString(),
+        data: DEFAULT_DATA,
+      },
+    };
+    saveAllCVs(cvs);
+    setLastActiveId(id);
+  }
+  return cvs;
+}
+
+export function createCV(name = 'Untitled CV', data = BLANK_DATA, template = 'modern') {
+  const cvs = loadAllCVs() || {};
+  const id = generateId();
+  const cv = { id, name, template, lastEdited: new Date().toISOString(), data };
+  cvs[id] = cv;
+  saveAllCVs(cvs);
+  setLastActiveId(id);
+  return cv;
+}
+
+export function duplicateCV(id) {
+  const cvs = loadAllCVs() || {};
+  const source = cvs[id];
+  if (!source) return null;
+  const newId = generateId();
+  const copy = {
+    ...source,
+    id: newId,
+    name: source.name + ' (copy)',
+    lastEdited: new Date().toISOString(),
+    data: JSON.parse(JSON.stringify(source.data)),
+  };
+  cvs[newId] = copy;
+  saveAllCVs(cvs);
+  return copy;
+}
+
+export function renameCV(id, name) {
+  const cvs = loadAllCVs() || {};
+  if (!cvs[id]) return;
+  cvs[id].name = name;
+  cvs[id].lastEdited = new Date().toISOString();
+  saveAllCVs(cvs);
+}
+
+export function deleteCV(id) {
+  const cvs = loadAllCVs() || {};
+  delete cvs[id];
+  saveAllCVs(cvs);
+  if (getLastActiveId() === id) {
+    const remaining = Object.keys(cvs);
+    setLastActiveId(remaining.length > 0 ? remaining[0] : null);
+  }
+}
+
+// ── Per-CV editor hook ───────────────────────────────────────────────────────
+
+export function useResumeData(cvId) {
+  const [cv, setCV] = useState(() => {
+    const cvs = loadAllCVs() || {};
+    return cvs[cvId] || null;
   });
 
-  const [template, setTemplate] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.template || 'modern';
-      }
-    } catch (e) {
-      // ignore
-    }
-    return 'modern';
-  });
+  const [data, setData] = useState(() => cv?.data || DEFAULT_DATA);
+  const [template, setTemplateState] = useState(() => cv?.template || 'modern');
 
   const debounceTimer = useRef(null);
 
-  // Debounced save to localStorage
-  const saveToStorage = useCallback((resumeData, tmpl) => {
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ resumeData, template: tmpl }));
-      } catch (e) {
-        // ignore
-      }
-    }, 500);
-  }, []);
+  const persistToStorage = useCallback(
+    (newData, newTemplate) => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        const cvs = loadAllCVs() || {};
+        if (!cvs[cvId]) return;
+        cvs[cvId].data = newData;
+        cvs[cvId].template = newTemplate;
+        cvs[cvId].lastEdited = new Date().toISOString();
+        saveAllCVs(cvs);
+      }, 500);
+    },
+    [cvId]
+  );
 
   useEffect(() => {
-    saveToStorage(data, template);
-  }, [data, template, saveToStorage]);
+    persistToStorage(data, template);
+  }, [data, template, persistToStorage]);
+
+  const setTemplate = useCallback(
+    (t) => {
+      setTemplateState(t);
+    },
+    []
+  );
 
   // Personal info
   const updatePersonalInfo = useCallback((field, value) => {
-    setData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, [field]: value } }));
+    setData((prev) => ({ ...prev, personalInfo: { ...prev.personalInfo, [field]: value } }));
   }, []);
 
   // Summary
   const updateSummary = useCallback((value) => {
-    setData(prev => ({ ...prev, summary: value }));
+    setData((prev) => ({ ...prev, summary: value }));
   }, []);
 
   // Experience
   const addExperience = useCallback(() => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       experience: [
         ...prev.experience,
-        { id: generateId(), company: '', role: '', startDate: '', endDate: '', bullets: [''] },
+        {
+          id: generateItemId(),
+          company: '',
+          role: '',
+          startDate: '',
+          endDate: '',
+          bullets: [''],
+        },
       ],
     }));
   }, []);
 
   const updateExperience = useCallback((id, field, value) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
-      experience: prev.experience.map(e => (e.id === id ? { ...e, [field]: value } : e)),
+      experience: prev.experience.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
     }));
   }, []);
 
   const removeExperience = useCallback((id) => {
-    setData(prev => ({ ...prev, experience: prev.experience.filter(e => e.id !== id) }));
+    setData((prev) => ({ ...prev, experience: prev.experience.filter((e) => e.id !== id) }));
   }, []);
 
   const addBullet = useCallback((expId) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
-      experience: prev.experience.map(e =>
+      experience: prev.experience.map((e) =>
         e.id === expId ? { ...e, bullets: [...e.bullets, ''] } : e
       ),
     }));
   }, []);
 
   const updateBullet = useCallback((expId, index, value) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
-      experience: prev.experience.map(e => {
+      experience: prev.experience.map((e) => {
         if (e.id !== expId) return e;
         const bullets = [...e.bullets];
         bullets[index] = value;
@@ -174,9 +334,9 @@ export function useResumeData() {
   }, []);
 
   const removeBullet = useCallback((expId, index) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
-      experience: prev.experience.map(e => {
+      experience: prev.experience.map((e) => {
         if (e.id !== expId) return e;
         const bullets = e.bullets.filter((_, i) => i !== index);
         return { ...e, bullets: bullets.length ? bullets : [''] };
@@ -186,55 +346,69 @@ export function useResumeData() {
 
   // Education
   const addEducation = useCallback(() => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       education: [
         ...prev.education,
-        { id: generateId(), school: '', degree: '', field: '', startDate: '', endDate: '', gpa: '' },
+        {
+          id: generateItemId(),
+          school: '',
+          degree: '',
+          field: '',
+          startDate: '',
+          endDate: '',
+          gpa: '',
+        },
       ],
     }));
   }, []);
 
   const updateEducation = useCallback((id, field, value) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
-      education: prev.education.map(e => (e.id === id ? { ...e, [field]: value } : e)),
+      education: prev.education.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
     }));
   }, []);
 
   const removeEducation = useCallback((id) => {
-    setData(prev => ({ ...prev, education: prev.education.filter(e => e.id !== id) }));
+    setData((prev) => ({ ...prev, education: prev.education.filter((e) => e.id !== id) }));
   }, []);
 
   // Skills
   const updateSkills = useCallback((value) => {
-    setData(prev => ({ ...prev, skills: value }));
+    setData((prev) => ({ ...prev, skills: value }));
   }, []);
 
   // Projects
   const addProject = useCallback(() => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
-      projects: [...prev.projects, { id: generateId(), name: '', description: '', link: '' }],
+      projects: [
+        ...(prev.projects || []),
+        { id: generateItemId(), name: '', description: '', link: '' },
+      ],
     }));
   }, []);
 
   const updateProject = useCallback((id, field, value) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
-      projects: prev.projects.map(p => (p.id === id ? { ...p, [field]: value } : p)),
+      projects: (prev.projects || []).map((p) => (p.id === id ? { ...p, [field]: value } : p)),
     }));
   }, []);
 
   const removeProject = useCallback((id) => {
-    setData(prev => ({ ...prev, projects: prev.projects.filter(p => p.id !== id) }));
+    setData((prev) => ({
+      ...prev,
+      projects: (prev.projects || []).filter((p) => p.id !== id),
+    }));
   }, []);
 
   // Clear all
   const clearAll = useCallback(() => {
     if (window.confirm('Are you sure you want to clear all resume data?')) {
       setData(DEFAULT_DATA);
-      setTemplate('modern');
+      setTemplateState('modern');
     }
   }, []);
 

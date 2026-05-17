@@ -27,11 +27,37 @@
   gap: 10px;
 }
 
+.editor-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .editor-title {
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
   white-space: nowrap;
+}
+
+.btn-back {
+  background: transparent;
+  color: #64748b;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.12s;
+}
+
+.btn-back:hover {
+  color: #2563eb;
 }
 
 .editor-actions {

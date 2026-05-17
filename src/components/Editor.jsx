@@ -49,6 +49,7 @@ export default function Editor({
   removeProject,
   clearAll,
   onDownloadPdf,
+  onBackToDashboard,
 }) {
   const [openSections, setOpenSections] = useState({
     personal: true,
@@ -66,7 +67,14 @@ export default function Editor({
     <div className="editor-panel">
       {/* Top actions */}
       <div className="editor-header">
-        <h1 className="editor-title">Resume Builder</h1>
+        <div className="editor-header-left">
+          {onBackToDashboard && (
+            <button className="btn btn-back" onClick={onBackToDashboard} title="Back to Dashboard">
+              &#8592; Dashboard
+            </button>
+          )}
+          <h1 className="editor-title">Resume Builder</h1>
+        </div>
         <div className="editor-actions">
           <button className="btn btn-primary" onClick={onDownloadPdf}>
             &#8659; Download PDF

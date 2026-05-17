@@ -1,0 +1,493 @@
+/* ============================================================
+   dashboard.css — Dashboard home screen styles
+   ============================================================ */
+
+/* ---- Page shell ---- */
+.dashboard {
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Header ---- */
+.dashboard-header {
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dashboard-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-logo-text {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.3px;
+}
+
+.dashboard-create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.35);
+  white-space: nowrap;
+}
+
+.dashboard-create-btn:hover {
+  background: #1d4ed8;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.4);
+}
+
+.dashboard-create-btn:active {
+  transform: translateY(1px);
+}
+
+/* ---- Main content ---- */
+.dashboard-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 36px 28px 60px;
+}
+
+.dashboard-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.dashboard-page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.dashboard-cv-count {
+  font-size: 14px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* ---- CV Grid ---- */
+.cv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ---- CV Card ---- */
+.cv-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.15s;
+  min-height: 200px;
+}
+
+.cv-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
+}
+
+.cv-card-bar {
+  height: 5px;
+  flex-shrink: 0;
+}
+
+.cv-card-body {
+  padding: 14px 16px 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cv-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.cv-card-template-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.cv-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+  cursor: text;
+  border-radius: 4px;
+  padding: 1px 3px;
+  margin-left: -3px;
+  transition: background 0.12s;
+  word-break: break-word;
+}
+
+.cv-card-name:hover {
+  background: #f1f5f9;
+  color: #2563eb;
+}
+
+.cv-card-date {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.cv-card-preview {
+  flex: 1;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+/* ---- Mini preview ---- */
+.mini-preview {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #475569;
+  max-height: 110px;
+  overflow: hidden;
+}
+
+.mini-preview-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-preview-title {
+  font-size: 10px;
+  color: #64748b;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-preview-summary {
+  font-size: 9.5px;
+  color: #94a3b8;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.mini-preview-section {
+  margin-top: 4px;
+}
+
+.mini-preview-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.mini-preview-exp {
+  font-size: 9.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #64748b;
+}
+
+.mini-preview-role {
+  font-weight: 600;
+  color: #475569;
+}
+
+.mini-preview-company {
+  color: #94a3b8;
+}
+
+/* ---- Card action row ---- */
+.cv-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 12px;
+  border-top: 1px solid #f1f5f9;
+  background: #fafafa;
+  gap: 8px;
+}
+
+.cv-card-btn {
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+.cv-card-btn-primary {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+}
+
+.cv-card-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.cv-card-icon-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.cv-card-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.cv-card-icon-btn:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.cv-card-icon-btn-danger:hover {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+/* ---- "New CV" ghost card ---- */
+.cv-card-new {
+  background: #fff;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.cv-card-new:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+/* ---- Empty state ---- */
+.dashboard-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.dashboard-empty-icon {
+  opacity: 0.6;
+}
+
+.dashboard-empty-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.dashboard-empty-desc {
+  font-size: 15px;
+  color: #64748b;
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+.dashboard-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.dashboard-empty-btn:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+}
+
+.dashboard-empty-btn:active {
+  transform: translateY(1px);
+}
+
+/* ---- Rename modal ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 28px 24px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.modal-input {
+  width: 100%;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+}
+
+.modal-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.modal-btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.modal-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.modal-btn-ghost {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.modal-btn-ghost:hover {
+  background: #e2e8f0;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .dashboard-header-inner {
+    padding: 12px 16px;
+  }
+
+  .dashboard-main {
+    padding: 24px 16px 48px;
+  }
+
+  .cv-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-logo-text {
+    font-size: 15px;
+  }
+}
