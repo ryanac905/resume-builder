@@ -68,6 +68,41 @@
   transform: translateY(1px);
 }
 
+/* ---- Export / Import buttons ---- */
+.dashboard-io-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  background: #fff;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+
+.dashboard-io-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.dashboard-io-btn:active {
+  background: #e2e8f0;
+}
+
+/* Import success / error message */
+.dashboard-import-msg {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #16a34a;
+  white-space: nowrap;
+}
+
 /* ---- Main content ---- */
 .dashboard-main {
   max-width: 1200px;
