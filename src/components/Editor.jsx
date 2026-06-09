@@ -251,14 +251,17 @@ export default function Editor({ data, setData, template, setTemplate, setTheme,
               <div key={q.id} className="entry-card">
                 <div className="entry-header"><span className="entry-num">{q.title || 'New qualification'}</span>
                   <button className="btn-remove" onClick={() => delItem('qualifications', q.id)}>✕</button></div>
-                <Field label="Qualification / Membership" value={q.title} onChange={(v) => setItem('qualifications', q.id, 'title', v)} placeholder="Member, HKIE (MHKIE)" />
+                <Field label="Qualification / Membership" value={q.title} onChange={(v) => setItem('qualifications', q.id, 'title', v)} placeholder="NEC4: ECC Project Manager Accreditation" />
                 <Row>
-                  <Field label="Awarding Body" value={q.body} onChange={(v) => setItem('qualifications', q.id, 'body', v)} placeholder="HKIE" />
+                  <Field label="Awarding Body" value={q.body} onChange={(v) => setItem('qualifications', q.id, 'body', v)} placeholder="NEC / HKIE" />
                   <Field label="Year" value={q.year} onChange={(v) => setItem('qualifications', q.id, 'year', v)} placeholder="2022" />
                 </Row>
+                <div className="form-field"><label className="form-label">Description (optional)</label>
+                  <RichText value={q.content} onChange={(html) => setItem('qualifications', q.id, 'content', html)} placeholder="Describe what the qualification demonstrates..." />
+                </div>
               </div>
             ))}
-            <button className="btn btn-add-entry" onClick={() => addItem('qualifications', { title: '', body: '', year: '' })}>+ Add Qualification</button>
+            <button className="btn btn-add-entry" onClick={() => addItem('qualifications', { title: '', body: '', year: '', content: '' })}>+ Add Qualification</button>
           </>
         );
 

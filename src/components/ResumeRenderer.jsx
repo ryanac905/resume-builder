@@ -161,12 +161,17 @@ const renderers = {
   qualifications: (d, accent) => d.qualifications.length ? (
     <div>
       {d.qualifications.map((q) => (
-        <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-          <div>
-            <span style={{ fontWeight: 700 }}>{q.title}</span>
-            {q.body && <span style={{ color: '#555' }}>{q.title ? ' — ' : ''}{q.body}</span>}
+        <div key={q.id} style={{ marginBottom: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <div>
+              <span style={{ fontWeight: 700 }}>{q.title}</span>
+              {q.body && <span style={{ color: '#555' }}>{q.title ? ' — ' : ''}{q.body}</span>}
+            </div>
+            {q.year && <span style={{ fontSize: '0.92em', color: '#666', whiteSpace: 'nowrap', marginLeft: '10px' }}>{q.year}</span>}
           </div>
-          {q.year && <span style={{ fontSize: '0.92em', color: '#666', whiteSpace: 'nowrap', marginLeft: '10px' }}>{q.year}</span>}
+          {q.content && q.content.trim() && (
+            <div className="rt-content" style={{ marginTop: '3px' }} dangerouslySetInnerHTML={{ __html: q.content }} />
+          )}
         </div>
       ))}
     </div>
