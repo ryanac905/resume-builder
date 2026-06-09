@@ -1,4 +1,5 @@
 import React from 'react';
+import { getExpContentHtml, hasExpContent } from '../../lib/expContent';
 
 const ACCENT = '#1a3a5c';
 const LIGHT_ACCENT = '#e8f0f7';
@@ -106,15 +107,12 @@ export default function Modern({ data }) {
                       {exp.startDate}{exp.endDate ? ` – ${exp.endDate}` : ''}
                     </div>
                   </div>
-                  {exp.description && exp.description.trim() && (
-                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#444', lineHeight: '1.55' }}>{exp.description}</p>
-                  )}
-                  {exp.bullets.filter(b => b.trim()).length > 0 && (
-                    <ul style={{ margin: '5px 0 0 0', paddingLeft: '16px' }}>
-                      {exp.bullets.filter(b => b.trim()).map((bullet, i) => (
-                        <li key={i} style={{ fontSize: '12px', marginBottom: '3px', color: '#333' }}>{bullet}</li>
-                      ))}
-                    </ul>
+                  {hasExpContent(exp) && (
+                    <div
+                      className="rt-content"
+                      style={{ fontSize: '12px', color: '#333', marginTop: '4px' }}
+                      dangerouslySetInnerHTML={{ __html: getExpContentHtml(exp) }}
+                    />
                   )}
                 </div>
               ))}

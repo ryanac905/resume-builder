@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import RichText from './RichText';
+import { getExpContentHtml } from '../lib/expContent';
 
 function SectionHeader({ title, isOpen, onToggle }) {
   return (
@@ -169,39 +171,12 @@ export default function Editor({
                     <FormField label="End Date" value={exp.endDate} onChange={v => updateExperience(exp.id, 'endDate', v)} placeholder="Present" />
                   </FormRow>
                   <div className="form-field">
-                    <label className="form-label">Description (optional)</label>
-                    <textarea
-                      className="form-textarea"
-                      value={exp.description || ''}
-                      onChange={e => updateExperience(exp.id, 'description', e.target.value)}
-                      placeholder="A short overview of the role, project, or contract scope..."
-                      rows={2}
+                    <label className="form-label">Description</label>
+                    <RichText
+                      value={getExpContentHtml(exp)}
+                      onChange={(html) => updateExperience(exp.id, 'content', html)}
+                      placeholder="Write an overview, then use the bullet list button for point-form duties..."
                     />
-                  </div>
-                  <div className="form-field">
-                    <label className="form-label">Bullet Points</label>
-                    {exp.bullets.map((bullet, i) => (
-                      <div key={i} className="bullet-row">
-                        <textarea
-                          className="form-input bullet-input"
-                          value={bullet}
-                          onChange={e => updateBullet(exp.id, i, e.target.value)}
-                          placeholder="Describe an achievement or responsibility..."
-                          rows={2}
-                        />
-                        <button
-                          className="btn-remove-bullet"
-                          onClick={() => removeBullet(exp.id, i)}
-                          title="Remove bullet"
-                          disabled={exp.bullets.length === 1}
-                        >
-                          &#10005;
-                        </button>
-                      </div>
-                    ))}
-                    <button className="btn btn-add-bullet" onClick={() => addBullet(exp.id)}>
-                      + Add Bullet
-                    </button>
                   </div>
                 </div>
               ))}

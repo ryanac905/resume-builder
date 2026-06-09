@@ -1,4 +1,5 @@
 import React from 'react';
+import { getExpContentHtml, hasExpContent } from '../../lib/expContent';
 
 function parseSkills(skillsStr) {
   return skillsStr
@@ -73,15 +74,12 @@ export default function Classic({ data }) {
                   {exp.startDate}{exp.endDate ? ` – ${exp.endDate}` : ''}
                 </div>
               </div>
-              {exp.description && exp.description.trim() && (
-                <p style={{ margin: '4px 0 0', fontSize: '12.5px', lineHeight: '1.6' }}>{exp.description}</p>
-              )}
-              {exp.bullets.filter(b => b.trim()).length > 0 && (
-                <ul style={{ margin: '5px 0 0 0', paddingLeft: '18px' }}>
-                  {exp.bullets.filter(b => b.trim()).map((bullet, i) => (
-                    <li key={i} style={{ fontSize: '12.5px', marginBottom: '3px' }}>{bullet}</li>
-                  ))}
-                </ul>
+              {hasExpContent(exp) && (
+                <div
+                  className="rt-content"
+                  style={{ fontSize: '12.5px', marginTop: '4px' }}
+                  dangerouslySetInnerHTML={{ __html: getExpContentHtml(exp) }}
+                />
               )}
             </div>
           ))}

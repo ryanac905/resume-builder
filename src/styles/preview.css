@@ -106,3 +106,22 @@
     min-height: unset;
   }
 }
+
+/* --- Rendered rich-text content in resume preview --- */
+.rt-content p {
+  margin: 0 0 4px;
+}
+
+.rt-content ul,
+.rt-content ol {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.rt-content li {
+  margin-bottom: 3px;
+}
+
+.rt-content:last-child > *:last-child {
+  margin-bottom: 0;
+}
