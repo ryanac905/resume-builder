@@ -59,7 +59,7 @@ const renderers = {
   experience: (d, accent) => d.experience.length ? (
     <div>
       {d.experience.map((exp) => (
-        <div key={exp.id} style={{ marginBottom: '14px' }}>
+        <div key={exp.id} className="pdf-block" style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <div>
               <span style={{ fontWeight: 700 }}>{exp.role}</span>
@@ -80,7 +80,7 @@ const renderers = {
   education: (d, accent) => d.education.length ? (
     <div>
       {d.education.map((edu) => (
-        <div key={edu.id} style={{ marginBottom: '10px' }}>
+        <div key={edu.id} className="pdf-block" style={{ marginBottom: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <span style={{ fontWeight: 700 }}>{edu.school}</span>
             <span style={{ fontSize: '0.92em', color: '#666', whiteSpace: 'nowrap', marginLeft: '10px' }}>
@@ -131,7 +131,7 @@ const renderers = {
   certifications: (d) => d.certifications.length ? (
     <div>
       {d.certifications.map((c) => (
-        <div key={c.id} style={{ marginBottom: '6px' }}>
+        <div key={c.id} className="pdf-block" style={{ marginBottom: '6px' }}>
           <div style={{ fontWeight: 600 }}>{c.name}</div>
           <div style={{ fontSize: '0.92em', color: '#666' }}>
             {[c.issuer, c.date].filter(Boolean).join(' · ')}
@@ -144,7 +144,7 @@ const renderers = {
   courses: (d) => d.courses.length ? (
     <div>
       {d.courses.map((c) => (
-        <div key={c.id} style={{ marginBottom: '6px' }}>
+        <div key={c.id} className="pdf-block" style={{ marginBottom: '6px' }}>
           <div style={{ fontWeight: 600 }}>{c.name}</div>
           <div style={{ fontSize: '0.92em', color: '#666' }}>
             {[c.institution, c.date].filter(Boolean).join(' · ')}
@@ -161,7 +161,7 @@ const renderers = {
   qualifications: (d, accent) => d.qualifications.length ? (
     <div>
       {d.qualifications.map((q) => (
-        <div key={q.id} style={{ marginBottom: '10px' }}>
+        <div key={q.id} className="pdf-block" style={{ marginBottom: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <div>
               <span style={{ fontWeight: 700 }}>{q.title}</span>
@@ -180,7 +180,7 @@ const renderers = {
   publicExams: (d, accent) => d.publicExams.length ? (
     <div>
       {d.publicExams.map((ex) => (
-        <div key={ex.id} style={{ marginBottom: '10px' }}>
+        <div key={ex.id} className="pdf-block" style={{ marginBottom: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <span style={{ fontWeight: 700 }}>{ex.exam}</span>
             {ex.year && <span style={{ fontSize: '0.92em', color: '#666', whiteSpace: 'nowrap', marginLeft: '10px' }}>{ex.year}</span>}
@@ -205,7 +205,7 @@ const renderers = {
   internships: (d, accent) => d.internships.length ? (
     <div>
       {d.internships.map((it) => (
-        <div key={it.id} style={{ marginBottom: '12px' }}>
+        <div key={it.id} className="pdf-block" style={{ marginBottom: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <div>
               <span style={{ fontWeight: 700 }}>{it.role}</span>
@@ -226,7 +226,7 @@ const renderers = {
   activities: (d, accent) => d.activities.length ? (
     <div>
       {d.activities.map((a) => (
-        <div key={a.id} style={{ marginBottom: '12px' }}>
+        <div key={a.id} className="pdf-block" style={{ marginBottom: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <div>
               <span style={{ fontWeight: 700 }}>{a.role}</span>
@@ -258,7 +258,7 @@ const renderers = {
   publications: (d, accent) => d.publications.length ? (
     <div>
       {d.publications.map((p) => (
-        <div key={p.id} style={{ marginBottom: '6px' }}>
+        <div key={p.id} className="pdf-block" style={{ marginBottom: '6px' }}>
           <div style={{ fontWeight: 600 }}>{p.title}</div>
           <div style={{ fontSize: '0.92em', color: '#666' }}>
             {[p.publisher, p.year].filter(Boolean).join(' · ')}
@@ -272,7 +272,7 @@ const renderers = {
   references: (d) => d.references.length ? (
     <div>
       {d.references.map((r) => (
-        <div key={r.id} style={{ marginBottom: '8px' }}>
+        <div key={r.id} className="pdf-block" style={{ marginBottom: '8px' }}>
           <div style={{ fontWeight: 600 }}>{r.name}{r.position ? `, ${r.position}` : ''}</div>
           {r.company && <div style={{ fontSize: '0.92em' }}>{r.company}</div>}
           {r.contact && <div style={{ fontSize: '0.92em', color: '#666' }}>{r.contact}</div>}

@@ -47,7 +47,7 @@ export default function EditorPage() {
     const filename = `${firstName}${lastName ? '_' + lastName : ''}_Resume.pdf`;
 
     const opt = {
-      margin: 0,
+      margin: [8, 0, 8, 0], // top/bottom breathing room (mm)
       filename,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
@@ -55,12 +55,15 @@ export default function EditorPage() {
         useCORS: true,
         logging: false,
         letterRendering: true,
+        windowWidth: element.scrollWidth,
       },
       jsPDF: {
         unit: 'mm',
         format: 'a4',
         orientation: 'portrait',
       },
+      // Avoid slicing entries / text across the page boundary
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.pdf-block', 'tr', 'li'] },
     };
 
     html2pdf().set(opt).from(element).save();

@@ -107,6 +107,12 @@
   }
 }
 
+/* Keep entries from being sliced across PDF page boundaries */
+.pdf-block {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
 /* --- Rendered rich-text content in resume preview --- */
 .rt-content p {
   margin: 0 0 4px;
