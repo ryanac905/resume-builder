@@ -158,6 +158,112 @@ const renderers = {
     <p style={{ margin: 0 }}>{d.hobbies}</p>
   ) : null,
 
+  qualifications: (d, accent) => d.qualifications.length ? (
+    <div>
+      {d.qualifications.map((q) => (
+        <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+          <div>
+            <span style={{ fontWeight: 700 }}>{q.title}</span>
+            {q.body && <span style={{ color: '#555' }}>{q.title ? ' — ' : ''}{q.body}</span>}
+          </div>
+          {q.year && <span style={{ fontSize: '0.92em', color: '#666', whiteSpace: 'nowrap', marginLeft: '10px' }}>{q.year}</span>}
+        </div>
+      ))}
+    </div>
+  ) : null,
+
+  publicExams: (d, accent) => d.publicExams.length ? (
+    <div>
+      {d.publicExams.map((ex) => (
+        <div key={ex.id} style={{ marginBottom: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ fontWeight: 700 }}>{ex.exam}</span>
+            {ex.year && <span style={{ fontSize: '0.92em', color: '#666', whiteSpace: 'nowrap', marginLeft: '10px' }}>{ex.year}</span>}
+          </div>
+          {ex.results && ex.results.length > 0 && (
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '3px' }}>
+              <tbody>
+                {ex.results.filter((r) => r.subject || r.grade).map((r) => (
+                  <tr key={r.id}>
+                    <td style={{ padding: '1px 0' }}>{r.subject}</td>
+                    <td style={{ padding: '1px 0', textAlign: 'right', fontWeight: 600, color: accent, whiteSpace: 'nowrap' }}>{r.grade}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      ))}
+    </div>
+  ) : null,
+
+  internships: (d, accent) => d.internships.length ? (
+    <div>
+      {d.internships.map((it) => (
+        <div key={it.id} style={{ marginBottom: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <div>
+              <span style={{ fontWeight: 700 }}>{it.role}</span>
+              {it.company && <span style={{ color: accent, fontWeight: 600 }}>{it.role ? ', ' : ''}{it.company}</span>}
+            </div>
+            <div style={{ fontSize: '0.92em', color: '#666', whiteSpace: 'nowrap', marginLeft: '10px' }}>
+              {it.startDate}{it.endDate ? ` – ${it.endDate}` : ''}
+            </div>
+          </div>
+          {it.content && it.content.trim() && (
+            <div className="rt-content" style={{ marginTop: '3px' }} dangerouslySetInnerHTML={{ __html: it.content }} />
+          )}
+        </div>
+      ))}
+    </div>
+  ) : null,
+
+  activities: (d, accent) => d.activities.length ? (
+    <div>
+      {d.activities.map((a) => (
+        <div key={a.id} style={{ marginBottom: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <div>
+              <span style={{ fontWeight: 700 }}>{a.role}</span>
+              {a.organization && <span style={{ color: accent, fontWeight: 600 }}>{a.role ? ', ' : ''}{a.organization}</span>}
+            </div>
+            <div style={{ fontSize: '0.92em', color: '#666', whiteSpace: 'nowrap', marginLeft: '10px' }}>
+              {a.startDate}{a.endDate ? ` – ${a.endDate}` : ''}
+            </div>
+          </div>
+          {a.content && a.content.trim() && (
+            <div className="rt-content" style={{ marginTop: '3px' }} dangerouslySetInnerHTML={{ __html: a.content }} />
+          )}
+        </div>
+      ))}
+    </div>
+  ) : null,
+
+  awards: (d) => d.awards.length ? (
+    <div>
+      {d.awards.map((a) => (
+        <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
+          <div><span style={{ fontWeight: 600 }}>{a.title}</span>{a.issuer && <span style={{ color: '#555' }}> — {a.issuer}</span>}</div>
+          {a.year && <span style={{ fontSize: '0.92em', color: '#666', whiteSpace: 'nowrap', marginLeft: '10px' }}>{a.year}</span>}
+        </div>
+      ))}
+    </div>
+  ) : null,
+
+  publications: (d, accent) => d.publications.length ? (
+    <div>
+      {d.publications.map((p) => (
+        <div key={p.id} style={{ marginBottom: '6px' }}>
+          <div style={{ fontWeight: 600 }}>{p.title}</div>
+          <div style={{ fontSize: '0.92em', color: '#666' }}>
+            {[p.publisher, p.year].filter(Boolean).join(' · ')}
+            {p.link && <span style={{ color: accent }}>{(p.publisher || p.year) ? ' · ' : ''}{p.link}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : null,
+
   references: (d) => d.references.length ? (
     <div>
       {d.references.map((r) => (
@@ -175,6 +281,9 @@ const SECTION_LABELS = {
   summary: 'Profile', experience: 'Employment History', education: 'Education',
   skills: 'Skills', languages: 'Languages', links: 'Links', certifications: 'Certifications',
   courses: 'Courses', hobbies: 'Hobbies', references: 'References',
+  qualifications: 'Professional Qualifications', publicExams: 'Public Examinations',
+  internships: 'Internships', activities: 'Extra-curricular Activities',
+  awards: 'Awards', publications: 'Publications',
 };
 
 function renderSection(key, d, accent, tpl, inSidebar) {

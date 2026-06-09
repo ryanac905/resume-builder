@@ -244,6 +244,116 @@ export default function Editor({ data, setData, template, setTemplate, setTheme,
           </>
         );
 
+      case 'qualifications':
+        return (
+          <>
+            {data.qualifications.map((q) => (
+              <div key={q.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{q.title || 'New qualification'}</span>
+                  <button className="btn-remove" onClick={() => delItem('qualifications', q.id)}>✕</button></div>
+                <Field label="Qualification / Membership" value={q.title} onChange={(v) => setItem('qualifications', q.id, 'title', v)} placeholder="Member, HKIE (MHKIE)" />
+                <Row>
+                  <Field label="Awarding Body" value={q.body} onChange={(v) => setItem('qualifications', q.id, 'body', v)} placeholder="HKIE" />
+                  <Field label="Year" value={q.year} onChange={(v) => setItem('qualifications', q.id, 'year', v)} placeholder="2022" />
+                </Row>
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('qualifications', { title: '', body: '', year: '' })}>+ Add Qualification</button>
+          </>
+        );
+
+      case 'publicExams':
+        return (
+          <>
+            {data.publicExams.map((ex) => (
+              <div key={ex.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{ex.exam || 'New examination'}</span>
+                  <button className="btn-remove" onClick={() => delItem('publicExams', ex.id)}>✕</button></div>
+                <Row>
+                  <Field label="Examination" value={ex.exam} onChange={(v) => setItem('publicExams', ex.id, 'exam', v)} placeholder="HKDSE / HKCEE / HKALE" />
+                  <Field label="Year" value={ex.year} onChange={(v) => setItem('publicExams', ex.id, 'year', v)} placeholder="2014" />
+                </Row>
+                <label className="form-label" style={{ marginBottom: '4px', display: 'block' }}>Subjects &amp; Grades</label>
+                {(ex.results || []).map((r) => (
+                  <div key={r.id} className="level-row">
+                    <input className="form-input" value={r.subject} placeholder="Subject" onChange={(e) => upd((d) => { const e2 = d.publicExams.find((x) => x.id === ex.id); const rr = e2.results.find((y) => y.id === r.id); if (rr) rr.subject = e.target.value; })} />
+                    <input className="form-input level-select" value={r.grade} placeholder="Grade" onChange={(e) => upd((d) => { const e2 = d.publicExams.find((x) => x.id === ex.id); const rr = e2.results.find((y) => y.id === r.id); if (rr) rr.grade = e.target.value; })} />
+                    <button className="btn-remove" onClick={() => upd((d) => { const e2 = d.publicExams.find((x) => x.id === ex.id); e2.results = e2.results.filter((y) => y.id !== r.id); })}>✕</button>
+                  </div>
+                ))}
+                <button className="btn btn-add-entry" onClick={() => upd((d) => { const e2 = d.publicExams.find((x) => x.id === ex.id); e2.results.push({ id: generateItemId(), subject: '', grade: '' }); })}>+ Add Subject</button>
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('publicExams', { exam: '', year: '', results: [{ id: generateItemId(), subject: '', grade: '' }] })}>+ Add Examination</button>
+          </>
+        );
+
+      case 'internships':
+      case 'activities': {
+        const arrKey = key;
+        const orgField = key === 'internships' ? 'company' : 'organization';
+        const orgLabel = key === 'internships' ? 'Company' : 'Organization';
+        return (
+          <>
+            {data[arrKey].map((it) => (
+              <div key={it.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{it.role || 'New entry'}</span>
+                  <button className="btn-remove" onClick={() => delItem(arrKey, it.id)}>✕</button></div>
+                <Row>
+                  <Field label={key === 'internships' ? 'Role' : 'Title'} value={it.role} onChange={(v) => setItem(arrKey, it.id, 'role', v)} placeholder={key === 'internships' ? 'Intern' : 'Volunteer'} />
+                  <Field label={orgLabel} value={it[orgField]} onChange={(v) => setItem(arrKey, it.id, orgField, v)} placeholder={orgLabel} />
+                </Row>
+                <Row>
+                  <Field label="Start" value={it.startDate} onChange={(v) => setItem(arrKey, it.id, 'startDate', v)} placeholder="Jun 2020" />
+                  <Field label="End" value={it.endDate} onChange={(v) => setItem(arrKey, it.id, 'endDate', v)} placeholder="Aug 2020" />
+                </Row>
+                <div className="form-field"><label className="form-label">Description</label>
+                  <RichText value={it.content} onChange={(html) => setItem(arrKey, it.id, 'content', html)} placeholder="What you did..." />
+                </div>
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem(arrKey, { role: '', [orgField]: '', startDate: '', endDate: '', content: '' })}>+ Add {key === 'internships' ? 'Internship' : 'Activity'}</button>
+          </>
+        );
+      }
+
+      case 'awards':
+        return (
+          <>
+            {data.awards.map((a) => (
+              <div key={a.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{a.title || 'New award'}</span>
+                  <button className="btn-remove" onClick={() => delItem('awards', a.id)}>✕</button></div>
+                <Field label="Award" value={a.title} onChange={(v) => setItem('awards', a.id, 'title', v)} placeholder="Best Graduate Award" />
+                <Row>
+                  <Field label="Issuer" value={a.issuer} onChange={(v) => setItem('awards', a.id, 'issuer', v)} placeholder="University" />
+                  <Field label="Year" value={a.year} onChange={(v) => setItem('awards', a.id, 'year', v)} placeholder="2018" />
+                </Row>
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('awards', { title: '', issuer: '', year: '' })}>+ Add Award</button>
+          </>
+        );
+
+      case 'publications':
+        return (
+          <>
+            {data.publications.map((p) => (
+              <div key={p.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{p.title || 'New publication'}</span>
+                  <button className="btn-remove" onClick={() => delItem('publications', p.id)}>✕</button></div>
+                <Field label="Title" value={p.title} onChange={(v) => setItem('publications', p.id, 'title', v)} placeholder="Paper / article title" />
+                <Row>
+                  <Field label="Publisher" value={p.publisher} onChange={(v) => setItem('publications', p.id, 'publisher', v)} placeholder="Journal / Publisher" />
+                  <Field label="Year" value={p.year} onChange={(v) => setItem('publications', p.id, 'year', v)} placeholder="2021" />
+                </Row>
+                <Field label="Link (optional)" value={p.link} onChange={(v) => setItem('publications', p.id, 'link', v)} placeholder="doi.org/..." />
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('publications', { title: '', publisher: '', year: '', link: '' })}>+ Add Publication</button>
+          </>
+        );
+
       default:
         return null;
     }

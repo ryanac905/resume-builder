@@ -76,11 +76,28 @@ export const DEFAULT_DATA = {
   ],
   certifications: [],
   courses: [],
+  qualifications: [
+    { id: 'q1', title: 'Member, The Hong Kong Institution of Engineers (MHKIE)', body: 'HKIE', year: '2022' },
+  ],
+  publicExams: [
+    {
+      id: 'pe1', exam: 'HKDSE', year: '2014',
+      results: [
+        { id: 'r1', subject: 'English Language', grade: '5*' },
+        { id: 'r2', subject: 'Mathematics', grade: '5' },
+        { id: 'r3', subject: 'Physics', grade: '5*' },
+      ],
+    },
+  ],
+  internships: [],
+  activities: [],
+  awards: [],
+  publications: [],
   hobbies: '',
   references: [],
   custom: [],
   theme: { ...DEFAULT_THEME },
-  sectionOrder: ['summary', 'experience', 'education', 'skills', 'languages'],
+  sectionOrder: ['summary', 'experience', 'education', 'publicExams', 'qualifications', 'skills', 'languages'],
 };
 
 const BLANK_DATA = {
@@ -93,6 +110,12 @@ const BLANK_DATA = {
   languages: [],
   certifications: [],
   courses: [],
+  qualifications: [],
+  publicExams: [],
+  internships: [],
+  activities: [],
+  awards: [],
+  publications: [],
   hobbies: '',
   references: [],
   custom: [],
@@ -105,13 +128,25 @@ export const ALL_SECTIONS = [
   { key: 'summary', label: 'Professional Summary', core: true },
   { key: 'experience', label: 'Employment History', core: true },
   { key: 'education', label: 'Education', core: true },
+  { key: 'qualifications', label: 'Professional Qualifications' },
+  { key: 'publicExams', label: 'Public Examinations' },
   { key: 'skills', label: 'Skills', core: true },
   { key: 'links', label: 'Links / Websites' },
   { key: 'languages', label: 'Languages' },
   { key: 'certifications', label: 'Certifications' },
   { key: 'courses', label: 'Courses' },
+  { key: 'internships', label: 'Internships' },
+  { key: 'activities', label: 'Extra-curricular Activities' },
+  { key: 'awards', label: 'Awards' },
+  { key: 'publications', label: 'Publications' },
   { key: 'hobbies', label: 'Hobbies' },
   { key: 'references', label: 'References' },
+];
+
+// Array-typed sections that must always exist on the data object.
+const ARRAY_SECTIONS = [
+  'links', 'education', 'languages', 'certifications', 'courses', 'references',
+  'custom', 'qualifications', 'publicExams', 'internships', 'activities', 'awards', 'publications',
 ];
 
 const CVS_STORAGE_KEY = 'resume-builder-cvs';
@@ -153,9 +188,11 @@ export function normalizeData(raw) {
   });
 
   // Arrays that must exist
-  for (const key of ['links', 'education', 'languages', 'certifications', 'courses', 'references', 'custom']) {
+  for (const key of ARRAY_SECTIONS) {
     if (!Array.isArray(d[key])) d[key] = [];
   }
+  // Public exams must each carry a results array
+  d.publicExams = d.publicExams.map((ex) => ({ ...ex, results: Array.isArray(ex.results) ? ex.results : [] }));
   if (typeof d.hobbies !== 'string') d.hobbies = '';
 
   // Section order: ensure it contains all enabled sections
