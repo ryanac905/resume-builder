@@ -73,6 +73,9 @@ export default function Classic({ data }) {
                   {exp.startDate}{exp.endDate ? ` – ${exp.endDate}` : ''}
                 </div>
               </div>
+              {exp.description && exp.description.trim() && (
+                <p style={{ margin: '4px 0 0', fontSize: '12.5px', lineHeight: '1.6' }}>{exp.description}</p>
+              )}
               {exp.bullets.filter(b => b.trim()).length > 0 && (
                 <ul style={{ margin: '5px 0 0 0', paddingLeft: '18px' }}>
                   {exp.bullets.filter(b => b.trim()).map((bullet, i) => (

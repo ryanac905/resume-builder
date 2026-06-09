@@ -169,6 +169,16 @@ export default function Editor({
                     <FormField label="End Date" value={exp.endDate} onChange={v => updateExperience(exp.id, 'endDate', v)} placeholder="Present" />
                   </FormRow>
                   <div className="form-field">
+                    <label className="form-label">Description (optional)</label>
+                    <textarea
+                      className="form-textarea"
+                      value={exp.description || ''}
+                      onChange={e => updateExperience(exp.id, 'description', e.target.value)}
+                      placeholder="A short overview of the role, project, or contract scope..."
+                      rows={2}
+                    />
+                  </div>
+                  <div className="form-field">
                     <label className="form-label">Bullet Points</label>
                     {exp.bullets.map((bullet, i) => (
                       <div key={i} className="bullet-row">

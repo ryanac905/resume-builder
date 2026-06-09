@@ -20,6 +20,8 @@ export const DEFAULT_DATA = {
       role: 'Senior Software Engineer',
       startDate: 'Jan 2021',
       endDate: 'Present',
+      description:
+        'Led the core platform team responsible for the product dashboard and real-time infrastructure serving millions of users.',
       bullets: [
         'Led a team of 5 engineers to redesign the core product dashboard, reducing load time by 60% and increasing user engagement by 35%.',
         'Architected and built a real-time notification system serving 2M+ users using WebSockets and Redis pub/sub.',
@@ -32,6 +34,8 @@ export const DEFAULT_DATA = {
       role: 'Software Engineer',
       startDate: 'Jun 2018',
       endDate: 'Dec 2020',
+      description:
+        'Built and maintained backend services and APIs for a high-traffic SaaS product used by enterprise clients.',
       bullets: [
         'Built and maintained RESTful APIs consumed by 15+ internal teams using Node.js and PostgreSQL.',
         'Migrated monolithic application to microservices, improving scalability and reducing infrastructure costs by 40%.',
@@ -295,6 +299,7 @@ export function useResumeData(cvId) {
           role: '',
           startDate: '',
           endDate: '',
+          description: '',
           bullets: [''],
         },
       ],

@@ -69,6 +69,9 @@ export default function Minimal({ data }) {
                   {exp.startDate}{exp.endDate ? ` – ${exp.endDate}` : ''}
                 </div>
               </div>
+              {exp.description && exp.description.trim() && (
+                <p style={{ margin: '5px 0 0', fontSize: '12.5px', color: '#444', lineHeight: '1.6', maxWidth: '620px' }}>{exp.description}</p>
+              )}
               {exp.bullets.filter(b => b.trim()).length > 0 && (
                 <ul style={{ margin: '6px 0 0', paddingLeft: '16px' }}>
                   {exp.bullets.filter(b => b.trim()).map((bullet, i) => (
