@@ -20,10 +20,21 @@ export default function RichText({ value, onChange, placeholder }) {
     if (onChange && ref.current) onChange(ref.current.innerHTML);
   };
 
-  const exec = (command) => {
-    document.execCommand(command, false, null);
+  const exec = (command, value = null) => {
+    document.execCommand(command, false, value);
     if (ref.current) ref.current.focus();
     handleInput();
+  };
+
+  const handleFontSize = (e) => {
+    const size = e.target.value;
+    if (size) {
+      // execCommand fontSize uses 1–7 size keywords
+      document.execCommand('fontSize', false, size);
+      if (ref.current) ref.current.focus();
+      handleInput();
+    }
+    e.target.value = ''; // reset back to the label
   };
 
   const ToolbarButton = ({ cmd, title, children }) => (
@@ -45,6 +56,20 @@ export default function RichText({ value, onChange, placeholder }) {
         <ToolbarButton cmd="bold" title="Bold"><b>B</b></ToolbarButton>
         <ToolbarButton cmd="italic" title="Italic"><i>I</i></ToolbarButton>
         <ToolbarButton cmd="underline" title="Underline"><u>U</u></ToolbarButton>
+        <span className="rt-divider" />
+        <select
+          className="rt-select"
+          title="Font size"
+          defaultValue=""
+          onMouseDown={(e) => e.stopPropagation()}
+          onChange={handleFontSize}
+        >
+          <option value="" disabled>Size</option>
+          <option value="1">Small</option>
+          <option value="3">Normal</option>
+          <option value="5">Large</option>
+          <option value="6">Heading</option>
+        </select>
         <span className="rt-divider" />
         <ToolbarButton cmd="insertUnorderedList" title="Bullet list">• List</ToolbarButton>
         <ToolbarButton cmd="insertOrderedList" title="Numbered list">1. List</ToolbarButton>
