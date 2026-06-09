@@ -404,3 +404,83 @@
 .richtext-editor p {
   margin: 0 0 6px;
 }
+
+/* ===== Customization bar ===== */
+.custom-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+.custom-group { display: flex; align-items: center; gap: 8px; }
+.custom-label { font-size: 12px; font-weight: 600; color: #64748b; }
+.swatches { display: flex; gap: 5px; }
+.swatch {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer; padding: 0;
+  transition: transform 0.1s;
+}
+.swatch:hover { transform: scale(1.15); }
+.swatch.active { border-color: #1e293b; box-shadow: 0 0 0 2px #fff inset; }
+.custom-select {
+  height: 30px; border: 1px solid #d1d5db; border-radius: 6px;
+  font-size: 12.5px; color: #334155; padding: 0 8px; background: #fff; cursor: pointer;
+}
+
+/* ===== Template mini thumbnails ===== */
+.template-thumb-mini {
+  width: 100%; height: 46px; border-radius: 4px; position: relative;
+  overflow: hidden; margin-bottom: 6px;
+}
+.template-thumb-mini .tt-name {
+  position: absolute; top: 6px; left: 6px; width: 50%; height: 5px;
+  background: rgba(255,255,255,0.9); border-radius: 2px;
+}
+.template-thumb-mini .tt-side {
+  position: absolute; top: 0; left: 0; width: 30%; height: 100%;
+  background: rgba(0,0,0,0.18);
+}
+
+/* ===== Skill / language level rows ===== */
+.level-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.level-row .form-input { flex: 1; }
+.level-select { flex: 0 0 130px; max-width: 130px; cursor: pointer; }
+
+/* ===== Reorderable section header ===== */
+.section-header-row {
+  display: flex; align-items: center; gap: 8px;
+  cursor: default; padding-right: 8px;
+}
+.drag-handle {
+  cursor: grab; color: #94a3b8; font-size: 14px; letter-spacing: -2px;
+  user-select: none; padding: 0 2px;
+}
+.drag-handle:active { cursor: grabbing; }
+.section-title-btn {
+  flex: 1; text-align: left; background: none; border: none;
+  font-size: 14px; font-weight: 600; color: #1e293b; cursor: pointer; padding: 0;
+}
+.section-tools { display: flex; align-items: center; gap: 2px; }
+.section-tool {
+  width: 26px; height: 26px; border: none; background: transparent;
+  border-radius: 5px; cursor: pointer; color: #94a3b8; font-size: 13px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.section-tool:hover { background: #f1f5f9; color: #475569; }
+.section-tool-danger:hover { background: #fef2f2; color: #ef4444; }
+.editor-section.dragging { opacity: 0.5; outline: 2px dashed #93c5fd; }
+
+/* ===== Add section ===== */
+.add-section-area { padding: 16px 20px 28px; }
+.add-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 10px; }
+.add-section-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.add-section-btn {
+  padding: 7px 12px; border: 1.5px solid #cbd5e1; background: #fff;
+  border-radius: 7px; font-size: 12.5px; color: #475569; cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.add-section-btn:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+.add-section-custom { border-style: dashed; }

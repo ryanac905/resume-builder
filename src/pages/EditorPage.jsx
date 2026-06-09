@@ -70,23 +70,10 @@ export default function EditorPage() {
     <div className="app-layout">
       <Editor
         data={resumeData.data}
+        setData={resumeData.setData}
         template={resumeData.template}
         setTemplate={resumeData.setTemplate}
-        updatePersonalInfo={resumeData.updatePersonalInfo}
-        updateSummary={resumeData.updateSummary}
-        addExperience={resumeData.addExperience}
-        updateExperience={resumeData.updateExperience}
-        removeExperience={resumeData.removeExperience}
-        addBullet={resumeData.addBullet}
-        updateBullet={resumeData.updateBullet}
-        removeBullet={resumeData.removeBullet}
-        addEducation={resumeData.addEducation}
-        updateEducation={resumeData.updateEducation}
-        removeEducation={resumeData.removeEducation}
-        updateSkills={resumeData.updateSkills}
-        addProject={resumeData.addProject}
-        updateProject={resumeData.updateProject}
-        removeProject={resumeData.removeProject}
+        setTheme={resumeData.setTheme}
         clearAll={resumeData.clearAll}
         onDownloadPdf={handleDownloadPdf}
         onBackToDashboard={() => navigate('/')}

@@ -1,89 +1,288 @@
 import React, { useState } from 'react';
 import RichText from './RichText';
-import { getExpContentHtml } from '../lib/expContent';
+import { TEMPLATE_LIST } from '../resume/templates';
+import { ALL_SECTIONS, generateItemId } from '../hooks/useResumeData';
 
-function SectionHeader({ title, isOpen, onToggle }) {
-  return (
-    <button className="section-header" onClick={onToggle}>
-      <span>{title}</span>
-      <span className={`chevron ${isOpen ? 'open' : ''}`}>&#9660;</span>
-    </button>
-  );
-}
+const ACCENT_SWATCHES = ['#1a3a5c', '#2563eb', '#0e7490', '#00b894', '#7c3aed', '#b45309', '#be123c', '#374151', '#111111'];
+const SPACING_OPTIONS = [{ v: 1.3, l: 'Tight' }, { v: 1.5, l: 'Normal' }, { v: 1.7, l: 'Relaxed' }, { v: 2.0, l: 'Spacious' }];
+const FONT_OPTIONS = [{ v: 'sans', l: 'Sans-serif' }, { v: 'serif', l: 'Serif' }, { v: 'mono', l: 'Monospace' }];
+const LEVELS = [
+  { v: 0, l: 'No bar' }, { v: 1, l: 'Novice' }, { v: 2, l: 'Beginner' },
+  { v: 3, l: 'Skillful' }, { v: 4, l: 'Experienced' }, { v: 5, l: 'Expert' },
+];
 
-function FormField({ label, value, onChange, type = 'text', placeholder = '' }) {
+const clone = (o) => (typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
+
+function Field({ label, value, onChange, type = 'text', placeholder = '' }) {
   return (
     <div className="form-field">
       <label className="form-label">{label}</label>
-      <input
-        className="form-input"
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
+      <input className="form-input" type={type} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
     </div>
   );
 }
+const Row = ({ children }) => <div className="form-row">{children}</div>;
 
-function FormRow({ children }) {
-  return <div className="form-row">{children}</div>;
-}
+export default function Editor({ data, setData, template, setTemplate, setTheme, clearAll, onDownloadPdf, onBackToDashboard }) {
+  const [open, setOpen] = useState({}); // collapsed sections by key
+  const [dragIdx, setDragIdx] = useState(null);
 
-export default function Editor({
-  data,
-  template,
-  setTemplate,
-  updatePersonalInfo,
-  updateSummary,
-  addExperience,
-  updateExperience,
-  removeExperience,
-  addBullet,
-  updateBullet,
-  removeBullet,
-  addEducation,
-  updateEducation,
-  removeEducation,
-  updateSkills,
-  addProject,
-  updateProject,
-  removeProject,
-  clearAll,
-  onDownloadPdf,
-  onBackToDashboard,
-}) {
-  const [openSections, setOpenSections] = useState({
-    personal: true,
-    summary: true,
-    experience: true,
-    education: false,
-    skills: false,
-    projects: false,
+  const isOpen = (k) => open[k] !== false; // default open
+  const toggle = (k) => setOpen((p) => ({ ...p, [k]: p[k] === false ? true : false }));
+
+  // mutate helper
+  const upd = (mut) => setData((prev) => { const next = clone(prev); mut(next); return next; });
+
+  // section order helpers
+  const order = data.sectionOrder || [];
+  const customSectionKeys = data.custom.map((c) => `custom:${c.id}`);
+  const fullOrder = [...order, ...customSectionKeys.filter((k) => !order.includes(k))];
+
+  const addableSections = ALL_SECTIONS.filter((s) => !fullOrder.includes(s.key));
+
+  const addSection = (key) => upd((d) => { if (!d.sectionOrder.includes(key)) d.sectionOrder.push(key); });
+  const removeSection = (key) => upd((d) => {
+    d.sectionOrder = d.sectionOrder.filter((k) => k !== key);
+    if (key.startsWith('custom:')) d.custom = d.custom.filter((c) => `custom:${c.id}` !== key);
+  });
+  const renameSection = (key, current) => {
+    const name = window.prompt('Rename section:', current);
+    if (name && name.trim()) {
+      if (key.startsWith('custom:')) {
+        const id = key.slice(7);
+        upd((d) => { const c = d.custom.find((x) => x.id === id); if (c) c.title = name.trim(); });
+      } else {
+        upd((d) => { d.sectionLabels = { ...(d.sectionLabels || {}), [key]: name.trim() }; });
+      }
+    }
+  };
+
+  const onDrop = (toIdx) => {
+    if (dragIdx === null || dragIdx === toIdx) return;
+    upd((d) => {
+      const arr = [...fullOrder];
+      const [moved] = arr.splice(dragIdx, 1);
+      arr.splice(toIdx, 0, moved);
+      d.sectionOrder = arr;
+    });
+    setDragIdx(null);
+  };
+
+  const addCustom = () => upd((d) => {
+    const id = generateItemId();
+    d.custom.push({ id, title: 'Custom Section', content: '' });
+    d.sectionOrder.push(`custom:${id}`);
   });
 
-  const toggle = (section) =>
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  // ── array item helpers ──
+  const addItem = (key, item) => upd((d) => d[key].push({ id: generateItemId(), ...item }));
+  const setItem = (key, id, field, value) => upd((d) => { const it = d[key].find((x) => x.id === id); if (it) it[field] = value; });
+  const delItem = (key, id) => upd((d) => { d[key] = d[key].filter((x) => x.id !== id); });
+
+  const sectionLabel = (key) => {
+    if (key.startsWith('custom:')) {
+      const c = data.custom.find((x) => `custom:${x.id}` === key);
+      return c?.title || 'Custom Section';
+    }
+    return data.sectionLabels?.[key] || ALL_SECTIONS.find((s) => s.key === key)?.label || key;
+  };
+
+  // ── render each section body ──
+  const renderSectionBody = (key) => {
+    if (key.startsWith('custom:')) {
+      const id = key.slice(7);
+      const c = data.custom.find((x) => x.id === id);
+      if (!c) return null;
+      return (
+        <div className="form-field">
+          <RichText value={c.content} onChange={(html) => setItem('custom', id, 'content', html)} placeholder="Write anything here..." />
+        </div>
+      );
+    }
+    switch (key) {
+      case 'summary':
+        return <textarea className="form-textarea" rows={4} value={data.summary} onChange={(e) => upd((d) => { d.summary = e.target.value; })} placeholder="A brief professional summary..." />;
+
+      case 'experience':
+        return (
+          <>
+            {data.experience.map((exp) => (
+              <div key={exp.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{exp.role || 'New role'}</span>
+                  <button className="btn-remove" onClick={() => delItem('experience', exp.id)}>✕</button></div>
+                <Row>
+                  <Field label="Job Title" value={exp.role} onChange={(v) => setItem('experience', exp.id, 'role', v)} placeholder="Software Engineer" />
+                  <Field label="Employer" value={exp.company} onChange={(v) => setItem('experience', exp.id, 'company', v)} placeholder="Company" />
+                </Row>
+                <Row>
+                  <Field label="Start Date" value={exp.startDate} onChange={(v) => setItem('experience', exp.id, 'startDate', v)} placeholder="Jan 2022" />
+                  <Field label="End Date" value={exp.endDate} onChange={(v) => setItem('experience', exp.id, 'endDate', v)} placeholder="Present" />
+                </Row>
+                <div className="form-field"><label className="form-label">Description</label>
+                  <RichText value={exp.content} onChange={(html) => setItem('experience', exp.id, 'content', html)} placeholder="Overview, then use the bullet list button for duties..." />
+                </div>
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('experience', { role: '', company: '', startDate: '', endDate: '', content: '' })}>+ Add Employment</button>
+          </>
+        );
+
+      case 'education':
+        return (
+          <>
+            {data.education.map((edu) => (
+              <div key={edu.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{edu.school || 'New entry'}</span>
+                  <button className="btn-remove" onClick={() => delItem('education', edu.id)}>✕</button></div>
+                <Field label="School" value={edu.school} onChange={(v) => setItem('education', edu.id, 'school', v)} placeholder="University" />
+                <Row>
+                  <Field label="Degree" value={edu.degree} onChange={(v) => setItem('education', edu.id, 'degree', v)} placeholder="B.S." />
+                  <Field label="Field" value={edu.field} onChange={(v) => setItem('education', edu.id, 'field', v)} placeholder="Computer Science" />
+                </Row>
+                <Row>
+                  <Field label="Start" value={edu.startDate} onChange={(v) => setItem('education', edu.id, 'startDate', v)} placeholder="2018" />
+                  <Field label="End" value={edu.endDate} onChange={(v) => setItem('education', edu.id, 'endDate', v)} placeholder="2022" />
+                </Row>
+                <Field label="GPA (optional)" value={edu.gpa} onChange={(v) => setItem('education', edu.id, 'gpa', v)} placeholder="3.8" />
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('education', { school: '', degree: '', field: '', startDate: '', endDate: '', gpa: '' })}>+ Add Education</button>
+          </>
+        );
+
+      case 'skills':
+      case 'languages': {
+        const arrKey = key;
+        const arr = data[arrKey];
+        return (
+          <>
+            {arr.map((s) => (
+              <div key={s.id} className="level-row">
+                <input className="form-input" value={s.name} onChange={(e) => setItem(arrKey, s.id, 'name', e.target.value)} placeholder={key === 'skills' ? 'Skill' : 'Language'} />
+                <select className="form-input level-select" value={s.level} onChange={(e) => setItem(arrKey, s.id, 'level', Number(e.target.value))}>
+                  {LEVELS.map((l) => <option key={l.v} value={l.v}>{l.l}</option>)}
+                </select>
+                <button className="btn-remove" onClick={() => delItem(arrKey, s.id)}>✕</button>
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem(arrKey, { name: '', level: 4 })}>+ Add {key === 'skills' ? 'Skill' : 'Language'}</button>
+          </>
+        );
+      }
+
+      case 'links':
+        return (
+          <>
+            {data.links.map((l) => (
+              <Row key={l.id}>
+                <Field label="Label" value={l.label} onChange={(v) => setItem('links', l.id, 'label', v)} placeholder="LinkedIn" />
+                <Field label="URL" value={l.url} onChange={(v) => setItem('links', l.id, 'url', v)} placeholder="linkedin.com/in/you" />
+                <button className="btn-remove" style={{ alignSelf: 'flex-end', marginBottom: '10px' }} onClick={() => delItem('links', l.id)}>✕</button>
+              </Row>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('links', { label: '', url: '' })}>+ Add Link</button>
+          </>
+        );
+
+      case 'certifications':
+        return (
+          <>
+            {data.certifications.map((c) => (
+              <div key={c.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{c.name || 'New certification'}</span>
+                  <button className="btn-remove" onClick={() => delItem('certifications', c.id)}>✕</button></div>
+                <Field label="Name" value={c.name} onChange={(v) => setItem('certifications', c.id, 'name', v)} placeholder="AWS Certified..." />
+                <Row>
+                  <Field label="Issuer" value={c.issuer} onChange={(v) => setItem('certifications', c.id, 'issuer', v)} placeholder="Amazon" />
+                  <Field label="Date" value={c.date} onChange={(v) => setItem('certifications', c.id, 'date', v)} placeholder="2023" />
+                </Row>
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('certifications', { name: '', issuer: '', date: '' })}>+ Add Certification</button>
+          </>
+        );
+
+      case 'courses':
+        return (
+          <>
+            {data.courses.map((c) => (
+              <div key={c.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{c.name || 'New course'}</span>
+                  <button className="btn-remove" onClick={() => delItem('courses', c.id)}>✕</button></div>
+                <Field label="Course" value={c.name} onChange={(v) => setItem('courses', c.id, 'name', v)} placeholder="Course name" />
+                <Row>
+                  <Field label="Institution" value={c.institution} onChange={(v) => setItem('courses', c.id, 'institution', v)} placeholder="Provider" />
+                  <Field label="Date" value={c.date} onChange={(v) => setItem('courses', c.id, 'date', v)} placeholder="2023" />
+                </Row>
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('courses', { name: '', institution: '', date: '' })}>+ Add Course</button>
+          </>
+        );
+
+      case 'hobbies':
+        return <textarea className="form-textarea" rows={3} value={data.hobbies} onChange={(e) => upd((d) => { d.hobbies = e.target.value; })} placeholder="Photography, hiking, chess..." />;
+
+      case 'references':
+        return (
+          <>
+            {data.references.map((r) => (
+              <div key={r.id} className="entry-card">
+                <div className="entry-header"><span className="entry-num">{r.name || 'New reference'}</span>
+                  <button className="btn-remove" onClick={() => delItem('references', r.id)}>✕</button></div>
+                <Row>
+                  <Field label="Name" value={r.name} onChange={(v) => setItem('references', r.id, 'name', v)} placeholder="Jane Doe" />
+                  <Field label="Position" value={r.position} onChange={(v) => setItem('references', r.id, 'position', v)} placeholder="Manager" />
+                </Row>
+                <Row>
+                  <Field label="Company" value={r.company} onChange={(v) => setItem('references', r.id, 'company', v)} placeholder="Company" />
+                  <Field label="Contact" value={r.contact} onChange={(v) => setItem('references', r.id, 'contact', v)} placeholder="email / phone" />
+                </Row>
+              </div>
+            ))}
+            <button className="btn btn-add-entry" onClick={() => addItem('references', { name: '', position: '', company: '', contact: '' })}>+ Add Reference</button>
+          </>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="editor-panel">
-      {/* Top actions */}
       <div className="editor-header">
         <div className="editor-header-left">
-          {onBackToDashboard && (
-            <button className="btn btn-back" onClick={onBackToDashboard} title="Back to Dashboard">
-              &#8592; Dashboard
-            </button>
-          )}
+          {onBackToDashboard && <button className="btn btn-back" onClick={onBackToDashboard}>← Dashboard</button>}
           <h1 className="editor-title">Resume Builder</h1>
         </div>
         <div className="editor-actions">
-          <button className="btn btn-primary" onClick={onDownloadPdf}>
-            &#8659; Download PDF
-          </button>
-          <button className="btn btn-ghost" onClick={clearAll}>
-            Clear All
-          </button>
+          <button className="btn btn-primary" onClick={onDownloadPdf}>⬇ Download PDF</button>
+          <button className="btn btn-ghost" onClick={clearAll}>Clear</button>
+        </div>
+      </div>
+
+      {/* Customization bar */}
+      <div className="custom-bar">
+        <div className="custom-group">
+          <span className="custom-label">Color</span>
+          <div className="swatches">
+            {ACCENT_SWATCHES.map((c) => (
+              <button key={c} className={`swatch ${data.theme.accent === c ? 'active' : ''}`} style={{ background: c }} onClick={() => setTheme({ accent: c })} title={c} />
+            ))}
+          </div>
+        </div>
+        <div className="custom-group">
+          <span className="custom-label">Font</span>
+          <select className="custom-select" value={data.theme.font} onChange={(e) => setTheme({ font: e.target.value })}>
+            {FONT_OPTIONS.map((f) => <option key={f.v} value={f.v}>{f.l}</option>)}
+          </select>
+        </div>
+        <div className="custom-group">
+          <span className="custom-label">Spacing</span>
+          <select className="custom-select" value={data.theme.spacing} onChange={(e) => setTheme({ spacing: Number(e.target.value) })}>
+            {SPACING_OPTIONS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}
+          </select>
         </div>
       </div>
 
@@ -91,254 +290,76 @@ export default function Editor({
       <div className="template-selector">
         <div className="template-label">Template</div>
         <div className="template-options">
-          {[
-            { id: 'modern', label: 'Modern', desc: 'Navy header · Sidebar' },
-            { id: 'classic', label: 'Classic', desc: 'Serif · Single column' },
-            { id: 'minimal', label: 'Minimal', desc: 'Clean · Whitespace' },
-          ].map(t => (
-            <button
-              key={t.id}
-              className={`template-btn ${template === t.id ? 'active' : ''}`}
-              onClick={() => setTemplate(t.id)}
-            >
-              <div className="template-thumb">
-                <TemplateThumbnail id={t.id} />
+          {TEMPLATE_LIST.map((t) => (
+            <button key={t.id} className={`template-btn ${template === t.id ? 'active' : ''}`} onClick={() => setTemplate(t.id)}>
+              <div className="template-thumb-mini" style={{ background: t.accent }}>
+                <div className="tt-name" />
+                {t.layout === 'sidebar' && <div className="tt-side" />}
               </div>
               <div className="template-btn-name">{t.label}</div>
-              <div className="template-btn-desc">{t.desc}</div>
+              <div className="template-btn-desc">{t.category}</div>
             </button>
           ))}
         </div>
       </div>
 
       <div className="editor-sections">
-        {/* Personal Info */}
+        {/* Personal Info — always first, not reorderable */}
         <div className="editor-section">
-          <SectionHeader title="Personal Info" isOpen={openSections.personal} onToggle={() => toggle('personal')} />
-          {openSections.personal && (
+          <button className="section-header" onClick={() => toggle('personal')}>
+            <span>Personal Details</span><span className={`chevron ${isOpen('personal') ? 'open' : ''}`}>▼</span>
+          </button>
+          {isOpen('personal') && (
             <div className="section-body">
-              <FormRow>
-                <FormField label="First Name" value={data.personalInfo.firstName} onChange={v => updatePersonalInfo('firstName', v)} placeholder="Alex" />
-                <FormField label="Last Name" value={data.personalInfo.lastName} onChange={v => updatePersonalInfo('lastName', v)} placeholder="Johnson" />
-              </FormRow>
-              <FormField label="Job Title / Role" value={data.personalInfo.title} onChange={v => updatePersonalInfo('title', v)} placeholder="Software Engineer" />
-              <FormRow>
-                <FormField label="Email" value={data.personalInfo.email} onChange={v => updatePersonalInfo('email', v)} type="email" placeholder="you@email.com" />
-                <FormField label="Phone" value={data.personalInfo.phone} onChange={v => updatePersonalInfo('phone', v)} placeholder="+1 (555) 000-0000" />
-              </FormRow>
-              <FormField label="Location" value={data.personalInfo.location} onChange={v => updatePersonalInfo('location', v)} placeholder="City, State" />
-              <FormRow>
-                <FormField label="LinkedIn" value={data.personalInfo.linkedin} onChange={v => updatePersonalInfo('linkedin', v)} placeholder="linkedin.com/in/..." />
-                <FormField label="Website" value={data.personalInfo.website} onChange={v => updatePersonalInfo('website', v)} placeholder="yoursite.com" />
-              </FormRow>
+              <Row>
+                <Field label="First Name" value={data.personalInfo.firstName} onChange={(v) => upd((d) => { d.personalInfo.firstName = v; })} placeholder="Alex" />
+                <Field label="Last Name" value={data.personalInfo.lastName} onChange={(v) => upd((d) => { d.personalInfo.lastName = v; })} placeholder="Johnson" />
+              </Row>
+              <Field label="Job Title" value={data.personalInfo.title} onChange={(v) => upd((d) => { d.personalInfo.title = v; })} placeholder="Software Engineer" />
+              <Row>
+                <Field label="Email" value={data.personalInfo.email} onChange={(v) => upd((d) => { d.personalInfo.email = v; })} placeholder="you@email.com" />
+                <Field label="Phone" value={data.personalInfo.phone} onChange={(v) => upd((d) => { d.personalInfo.phone = v; })} placeholder="+1 (555) 000-0000" />
+              </Row>
+              <Field label="Location" value={data.personalInfo.location} onChange={(v) => upd((d) => { d.personalInfo.location = v; })} placeholder="City, Country" />
             </div>
           )}
         </div>
 
-        {/* Summary */}
-        <div className="editor-section">
-          <SectionHeader title="Summary / Objective" isOpen={openSections.summary} onToggle={() => toggle('summary')} />
-          {openSections.summary && (
-            <div className="section-body">
-              <textarea
-                className="form-textarea"
-                value={data.summary}
-                onChange={e => updateSummary(e.target.value)}
-                placeholder="A brief professional summary highlighting your key skills and career goals..."
-                rows={4}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Experience */}
-        <div className="editor-section">
-          <SectionHeader title={`Work Experience (${data.experience.length})`} isOpen={openSections.experience} onToggle={() => toggle('experience')} />
-          {openSections.experience && (
-            <div className="section-body">
-              {data.experience.map((exp, index) => (
-                <div key={exp.id} className="entry-card">
-                  <div className="entry-header">
-                    <span className="entry-num">#{index + 1}</span>
-                    <button className="btn-remove" onClick={() => removeExperience(exp.id)} title="Remove">&#10005;</button>
-                  </div>
-                  <FormRow>
-                    <FormField label="Company" value={exp.company} onChange={v => updateExperience(exp.id, 'company', v)} placeholder="Company Name" />
-                    <FormField label="Role / Title" value={exp.role} onChange={v => updateExperience(exp.id, 'role', v)} placeholder="Job Title" />
-                  </FormRow>
-                  <FormRow>
-                    <FormField label="Start Date" value={exp.startDate} onChange={v => updateExperience(exp.id, 'startDate', v)} placeholder="Jan 2022" />
-                    <FormField label="End Date" value={exp.endDate} onChange={v => updateExperience(exp.id, 'endDate', v)} placeholder="Present" />
-                  </FormRow>
-                  <div className="form-field">
-                    <label className="form-label">Description</label>
-                    <RichText
-                      value={getExpContentHtml(exp)}
-                      onChange={(html) => updateExperience(exp.id, 'content', html)}
-                      placeholder="Write an overview, then use the bullet list button for point-form duties..."
-                    />
-                  </div>
-                </div>
-              ))}
-              <button className="btn btn-add-entry" onClick={addExperience}>+ Add Experience</button>
-            </div>
-          )}
-        </div>
-
-        {/* Education */}
-        <div className="editor-section">
-          <SectionHeader title={`Education (${data.education.length})`} isOpen={openSections.education} onToggle={() => toggle('education')} />
-          {openSections.education && (
-            <div className="section-body">
-              {data.education.map((edu, index) => (
-                <div key={edu.id} className="entry-card">
-                  <div className="entry-header">
-                    <span className="entry-num">#{index + 1}</span>
-                    <button className="btn-remove" onClick={() => removeEducation(edu.id)} title="Remove">&#10005;</button>
-                  </div>
-                  <FormField label="School / University" value={edu.school} onChange={v => updateEducation(edu.id, 'school', v)} placeholder="University Name" />
-                  <FormRow>
-                    <FormField label="Degree" value={edu.degree} onChange={v => updateEducation(edu.id, 'degree', v)} placeholder="B.S., M.S., Ph.D." />
-                    <FormField label="Field of Study" value={edu.field} onChange={v => updateEducation(edu.id, 'field', v)} placeholder="Computer Science" />
-                  </FormRow>
-                  <FormRow>
-                    <FormField label="Start Year" value={edu.startDate} onChange={v => updateEducation(edu.id, 'startDate', v)} placeholder="2018" />
-                    <FormField label="End Year" value={edu.endDate} onChange={v => updateEducation(edu.id, 'endDate', v)} placeholder="2022" />
-                  </FormRow>
-                  <FormField label="GPA (optional)" value={edu.gpa} onChange={v => updateEducation(edu.id, 'gpa', v)} placeholder="3.9" />
-                </div>
-              ))}
-              <button className="btn btn-add-entry" onClick={addEducation}>+ Add Education</button>
-            </div>
-          )}
-        </div>
-
-        {/* Skills */}
-        <div className="editor-section">
-          <SectionHeader title="Skills" isOpen={openSections.skills} onToggle={() => toggle('skills')} />
-          {openSections.skills && (
-            <div className="section-body">
-              <div className="form-field">
-                <label className="form-label">Skills (comma-separated)</label>
-                <textarea
-                  className="form-textarea"
-                  value={data.skills}
-                  onChange={e => updateSkills(e.target.value)}
-                  placeholder="React, Node.js, Python, PostgreSQL, Docker..."
-                  rows={3}
-                />
+        {/* Reorderable sections */}
+        {fullOrder.map((key, idx) => (
+          <div
+            key={key}
+            className={`editor-section ${dragIdx === idx ? 'dragging' : ''}`}
+            draggable
+            onDragStart={() => setDragIdx(idx)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => onDrop(idx)}
+            onDragEnd={() => setDragIdx(null)}
+          >
+            <div className="section-header section-header-row">
+              <span className="drag-handle" title="Drag to reorder">⋮⋮</span>
+              <button className="section-title-btn" onClick={() => toggle(key)}>{sectionLabel(key)}</button>
+              <div className="section-tools">
+                <button className="section-tool" title="Rename" onClick={() => renameSection(key, sectionLabel(key))}>✎</button>
+                <button className="section-tool section-tool-danger" title="Remove section" onClick={() => removeSection(key)}>🗑</button>
+                <button className="section-tool" onClick={() => toggle(key)}><span className={`chevron ${isOpen(key) ? 'open' : ''}`}>▼</span></button>
               </div>
-              {data.skills && (
-                <div className="skills-preview">
-                  {data.skills.split(',').map(s => s.trim()).filter(Boolean).map((skill, i) => (
-                    <span key={i} className="skill-tag">{skill}</span>
-                  ))}
-                </div>
-              )}
             </div>
-          )}
-        </div>
+            {isOpen(key) && <div className="section-body">{renderSectionBody(key)}</div>}
+          </div>
+        ))}
 
-        {/* Projects */}
-        <div className="editor-section">
-          <SectionHeader title={`Projects (${data.projects ? data.projects.length : 0})`} isOpen={openSections.projects} onToggle={() => toggle('projects')} />
-          {openSections.projects && (
-            <div className="section-body">
-              {data.projects && data.projects.map((proj, index) => (
-                <div key={proj.id} className="entry-card">
-                  <div className="entry-header">
-                    <span className="entry-num">#{index + 1}</span>
-                    <button className="btn-remove" onClick={() => removeProject(proj.id)} title="Remove">&#10005;</button>
-                  </div>
-                  <FormRow>
-                    <FormField label="Project Name" value={proj.name} onChange={v => updateProject(proj.id, 'name', v)} placeholder="My Awesome Project" />
-                    <FormField label="Link (optional)" value={proj.link} onChange={v => updateProject(proj.id, 'link', v)} placeholder="github.com/you/project" />
-                  </FormRow>
-                  <div className="form-field">
-                    <label className="form-label">Description</label>
-                    <textarea
-                      className="form-textarea"
-                      value={proj.description}
-                      onChange={e => updateProject(proj.id, 'description', e.target.value)}
-                      placeholder="Brief description of the project, tech used, and impact..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              ))}
-              <button className="btn btn-add-entry" onClick={addProject}>+ Add Project</button>
-            </div>
-          )}
+        {/* Add section */}
+        <div className="add-section-area">
+          <div className="add-section-title">Add a section</div>
+          <div className="add-section-btns">
+            {addableSections.map((s) => (
+              <button key={s.key} className="add-section-btn" onClick={() => addSection(s.key)}>+ {s.label}</button>
+            ))}
+            <button className="add-section-btn add-section-custom" onClick={addCustom}>+ Custom Section</button>
+          </div>
         </div>
       </div>
     </div>
-  );
-}
-
-// Mini SVG thumbnail for each template
-function TemplateThumbnail({ id }) {
-  if (id === 'modern') {
-    return (
-      <svg viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-        <rect width="60" height="80" fill="#f0f4f8" />
-        <rect width="60" height="20" fill="#1a3a5c" />
-        <rect x="3" y="5" width="30" height="4" rx="1" fill="#fff" opacity="0.9" />
-        <rect x="3" y="11" width="18" height="2" rx="1" fill="#fff" opacity="0.6" />
-        <rect width="16" height="80" x="0" y="20" fill="#e8f0f7" />
-        <rect x="2" y="24" width="12" height="2" rx="1" fill="#1a3a5c" opacity="0.7" />
-        <rect x="2" y="28" width="10" height="1.5" rx="0.5" fill="#555" opacity="0.5" />
-        <rect x="2" y="31" width="11" height="1.5" rx="0.5" fill="#555" opacity="0.5" />
-        <rect x="2" y="34" width="9" height="1.5" rx="0.5" fill="#555" opacity="0.5" />
-        <rect x="19" y="24" width="18" height="2" rx="1" fill="#1a3a5c" opacity="0.7" />
-        <rect x="19" y="28" width="35" height="1.5" rx="0.5" fill="#555" opacity="0.4" />
-        <rect x="19" y="31" width="32" height="1.5" rx="0.5" fill="#555" opacity="0.4" />
-        <rect x="19" y="34" width="38" height="1.5" rx="0.5" fill="#555" opacity="0.4" />
-        <rect x="19" y="40" width="18" height="2" rx="1" fill="#1a3a5c" opacity="0.7" />
-        <rect x="19" y="44" width="35" height="1.5" rx="0.5" fill="#555" opacity="0.4" />
-        <rect x="19" y="47" width="30" height="1.5" rx="0.5" fill="#555" opacity="0.4" />
-      </svg>
-    );
-  }
-  if (id === 'classic') {
-    return (
-      <svg viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-        <rect width="60" height="80" fill="#fafafa" />
-        <rect x="10" y="6" width="40" height="5" rx="1" fill="#111" opacity="0.85" />
-        <rect x="15" y="13" width="30" height="2" rx="0.5" fill="#555" opacity="0.6" />
-        <rect x="5" y="18" width="50" height="1" fill="#111" opacity="0.8" />
-        <rect x="5" y="22" width="20" height="2" rx="0.5" fill="#111" opacity="0.7" />
-        <rect x="5" y="25" width="50" height="1" fill="#111" opacity="0.4" />
-        <rect x="5" y="28" width="50" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-        <rect x="5" y="31" width="45" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-        <rect x="5" y="36" width="20" height="2" rx="0.5" fill="#111" opacity="0.7" />
-        <rect x="5" y="39" width="50" height="1" fill="#111" opacity="0.4" />
-        <rect x="5" y="42" width="50" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-        <rect x="5" y="45" width="45" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-        <rect x="5" y="48" width="40" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-        <rect x="5" y="53" width="20" height="2" rx="0.5" fill="#111" opacity="0.7" />
-        <rect x="5" y="56" width="50" height="1" fill="#111" opacity="0.4" />
-        <rect x="5" y="59" width="50" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-        <rect x="5" y="62" width="42" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-      </svg>
-    );
-  }
-  // minimal
-  return (
-    <svg viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-      <rect width="60" height="80" fill="#fff" />
-      <rect x="5" y="7" width="32" height="7" rx="1" fill="#1a1a1a" opacity="0.85" />
-      <rect x="5" y="16" width="18" height="2" rx="0.5" fill="#555" opacity="0.6" />
-      <rect x="5" y="20" width="12" height="2.5" rx="1" fill="#00b894" />
-      <rect x="5" y="25" width="45" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-      <rect x="5" y="28" width="40" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-      <rect x="5" y="34" width="15" height="2" rx="0.5" fill="#00b894" opacity="0.9" />
-      <rect x="5" y="39" width="50" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-      <rect x="5" y="42" width="45" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-      <rect x="5" y="45" width="48" height="1.2" rx="0.3" fill="#555" opacity="0.4" />
-      <rect x="5" y="50" width="15" height="2" rx="0.5" fill="#00b894" opacity="0.9" />
-      <rect x="5" y="55" width="8" height="5" rx="2.5" fill="none" stroke="#00b894" strokeWidth="1" />
-      <rect x="15" y="55" width="10" height="5" rx="2.5" fill="none" stroke="#00b894" strokeWidth="1" />
-      <rect x="27" y="55" width="9" height="5" rx="2.5" fill="none" stroke="#00b894" strokeWidth="1" />
-    </svg>
   );
 }

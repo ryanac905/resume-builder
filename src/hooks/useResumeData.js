@@ -1,5 +1,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+// ── Theme defaults ────────────────────────────────────────────────────────────
+export const DEFAULT_THEME = {
+  accent: '#1a3a5c',
+  font: 'sans',       // 'sans' | 'serif' | 'mono'
+  spacing: 1.5,       // line-height multiplier
+  fontScale: 1,       // overall size multiplier
+};
+
+export const FONT_STACKS = {
+  sans: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+  serif: "Georgia, 'Times New Roman', serif",
+  mono: "'Courier New', monospace",
+};
+
+// ── Sample data ────────────────────────────────────────────────────────────────
 export const DEFAULT_DATA = {
   personalInfo: {
     firstName: 'Alex',
@@ -8,11 +23,14 @@ export const DEFAULT_DATA = {
     email: 'alex.johnson@email.com',
     phone: '+1 (555) 234-5678',
     location: 'San Francisco, CA',
-    linkedin: 'linkedin.com/in/alexjohnson',
-    website: 'alexjohnson.dev',
+    photo: '',
   },
   summary:
-    'Passionate software engineer with 6+ years of experience building scalable web applications and distributed systems. Proven track record of leading cross-functional teams, shipping high-impact features, and mentoring junior engineers. Strong background in React, Node.js, and cloud infrastructure.',
+    'Passionate software engineer with 6+ years of experience building scalable web applications and distributed systems. Proven track record of leading cross-functional teams, shipping high-impact features, and mentoring junior engineers.',
+  links: [
+    { id: 'l1', label: 'LinkedIn', url: 'linkedin.com/in/alexjohnson' },
+    { id: 'l2', label: 'Portfolio', url: 'alexjohnson.dev' },
+  ],
   experience: [
     {
       id: '1',
@@ -20,13 +38,8 @@ export const DEFAULT_DATA = {
       role: 'Senior Software Engineer',
       startDate: 'Jan 2021',
       endDate: 'Present',
-      description:
-        'Led the core platform team responsible for the product dashboard and real-time infrastructure serving millions of users.',
-      bullets: [
-        'Led a team of 5 engineers to redesign the core product dashboard, reducing load time by 60% and increasing user engagement by 35%.',
-        'Architected and built a real-time notification system serving 2M+ users using WebSockets and Redis pub/sub.',
-        'Implemented CI/CD pipelines with GitHub Actions, cutting deployment time from 45 minutes to under 8 minutes.',
-      ],
+      content:
+        '<p>Led the core platform team responsible for the product dashboard and real-time infrastructure.</p><ul><li>Led a team of 5 engineers to redesign the core product dashboard, reducing load time by 60%.</li><li>Architected a real-time notification system serving 2M+ users using WebSockets and Redis.</li><li>Implemented CI/CD pipelines with GitHub Actions, cutting deployment time to under 8 minutes.</li></ul>',
     },
     {
       id: '2',
@@ -34,13 +47,8 @@ export const DEFAULT_DATA = {
       role: 'Software Engineer',
       startDate: 'Jun 2018',
       endDate: 'Dec 2020',
-      description:
-        'Built and maintained backend services and APIs for a high-traffic SaaS product used by enterprise clients.',
-      bullets: [
-        'Built and maintained RESTful APIs consumed by 15+ internal teams using Node.js and PostgreSQL.',
-        'Migrated monolithic application to microservices, improving scalability and reducing infrastructure costs by 40%.',
-        'Collaborated with design and product teams to ship 3 major feature releases per quarter.',
-      ],
+      content:
+        '<p>Built and maintained backend services for a high-traffic SaaS product.</p><ul><li>Maintained RESTful APIs consumed by 15+ internal teams using Node.js and PostgreSQL.</li><li>Migrated a monolith to microservices, reducing infrastructure costs by 40%.</li></ul>',
     },
   ],
   education: [
@@ -54,43 +62,57 @@ export const DEFAULT_DATA = {
       gpa: '3.8',
     },
   ],
-  skills:
-    'React, TypeScript, Node.js, Python, PostgreSQL, Redis, Docker, Kubernetes, AWS, GraphQL, REST APIs, Git',
-  projects: [
-    {
-      id: '1',
-      name: 'OpenFlow',
-      description:
-        'An open-source workflow automation tool built with React and Node.js. Supports drag-and-drop pipeline creation with 20+ built-in integrations.',
-      link: 'github.com/alexj/openflow',
-    },
-    {
-      id: '2',
-      name: 'DevPulse',
-      description:
-        'Developer productivity dashboard that aggregates metrics from GitHub, Jira, and Slack to surface actionable insights for engineering teams.',
-      link: 'devpulse.io',
-    },
+  skills: [
+    { id: 's1', name: 'React', level: 5 },
+    { id: 's2', name: 'TypeScript', level: 5 },
+    { id: 's3', name: 'Node.js', level: 4 },
+    { id: 's4', name: 'Python', level: 4 },
+    { id: 's5', name: 'PostgreSQL', level: 4 },
+    { id: 's6', name: 'AWS', level: 3 },
   ],
+  languages: [
+    { id: 'lang1', name: 'English', level: 5 },
+    { id: 'lang2', name: 'Spanish', level: 3 },
+  ],
+  certifications: [],
+  courses: [],
+  hobbies: '',
+  references: [],
+  custom: [],
+  theme: { ...DEFAULT_THEME },
+  sectionOrder: ['summary', 'experience', 'education', 'skills', 'languages'],
 };
 
 const BLANK_DATA = {
-  personalInfo: {
-    firstName: '',
-    lastName: '',
-    title: '',
-    email: '',
-    phone: '',
-    location: '',
-    linkedin: '',
-    website: '',
-  },
+  personalInfo: { firstName: '', lastName: '', title: '', email: '', phone: '', location: '', photo: '' },
   summary: '',
+  links: [],
   experience: [],
   education: [],
-  skills: '',
-  projects: [],
+  skills: [],
+  languages: [],
+  certifications: [],
+  courses: [],
+  hobbies: '',
+  references: [],
+  custom: [],
+  theme: { ...DEFAULT_THEME },
+  sectionOrder: ['summary', 'experience', 'education', 'skills'],
 };
+
+// All optional sections that can be added.
+export const ALL_SECTIONS = [
+  { key: 'summary', label: 'Professional Summary', core: true },
+  { key: 'experience', label: 'Employment History', core: true },
+  { key: 'education', label: 'Education', core: true },
+  { key: 'skills', label: 'Skills', core: true },
+  { key: 'links', label: 'Links / Websites' },
+  { key: 'languages', label: 'Languages' },
+  { key: 'certifications', label: 'Certifications' },
+  { key: 'courses', label: 'Courses' },
+  { key: 'hobbies', label: 'Hobbies' },
+  { key: 'references', label: 'References' },
+];
 
 const CVS_STORAGE_KEY = 'resume-builder-cvs';
 const LAST_ACTIVE_KEY = 'resume-builder-last-active';
@@ -98,73 +120,91 @@ const LAST_ACTIVE_KEY = 'resume-builder-last-active';
 function generateId() {
   return 'cv_' + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9));
 }
-
-function generateItemId() {
+export function generateItemId() {
   return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9);
 }
 
-// ── Storage helpers ──────────────────────────────────────────────────────────
+// ── Normalize / migrate any stored data to the current schema ───────────────────
+export function normalizeData(raw) {
+  const d = { ...BLANK_DATA, ...(raw || {}) };
 
+  d.personalInfo = { ...BLANK_DATA.personalInfo, ...(raw?.personalInfo || {}) };
+  d.theme = { ...DEFAULT_THEME, ...(raw?.theme || {}) };
+
+  // Skills: old format was a comma-separated string
+  if (typeof raw?.skills === 'string') {
+    d.skills = raw.skills
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((name) => ({ id: generateItemId(), name, level: 4 }));
+  } else if (!Array.isArray(d.skills)) {
+    d.skills = [];
+  }
+
+  // Experience: ensure content exists (migrate description + bullets)
+  d.experience = (Array.isArray(d.experience) ? d.experience : []).map((e) => {
+    if (e.content) return e;
+    let html = '';
+    if (e.description && e.description.trim()) html += `<p>${e.description}</p>`;
+    const bullets = (e.bullets || []).filter((b) => b && b.trim());
+    if (bullets.length) html += `<ul>${bullets.map((b) => `<li>${b}</li>`).join('')}</ul>`;
+    return { ...e, content: html };
+  });
+
+  // Arrays that must exist
+  for (const key of ['links', 'education', 'languages', 'certifications', 'courses', 'references', 'custom']) {
+    if (!Array.isArray(d[key])) d[key] = [];
+  }
+  if (typeof d.hobbies !== 'string') d.hobbies = '';
+
+  // Section order: ensure it contains all enabled sections
+  if (!Array.isArray(d.sectionOrder) || d.sectionOrder.length === 0) {
+    d.sectionOrder = ['summary', 'experience', 'education', 'skills'];
+  }
+  return d;
+}
+
+// ── Storage helpers ──────────────────────────────────────────────────────────
 export function loadAllCVs() {
   try {
     const raw = localStorage.getItem(CVS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Validate it's a plain object
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        return parsed;
-      }
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
     }
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
   return null;
 }
 
 export function saveAllCVs(cvs) {
   try {
     localStorage.setItem(CVS_STORAGE_KEY, JSON.stringify(cvs));
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
 }
 
 export function getLastActiveId() {
-  try {
-    return localStorage.getItem(LAST_ACTIVE_KEY) || null;
-  } catch {
-    return null;
-  }
+  try { return localStorage.getItem(LAST_ACTIVE_KEY) || null; } catch { return null; }
 }
-
 export function setLastActiveId(id) {
-  try {
-    localStorage.setItem(LAST_ACTIVE_KEY, id);
-  } catch {
-    // ignore
-  }
+  try { localStorage.setItem(LAST_ACTIVE_KEY, id); } catch { /* ignore */ }
 }
 
-// ── Multi-CV CRUD helpers ────────────────────────────────────────────────────
-
+// ── Multi-CV CRUD ───────────────────────────────────────────────────────────
 export function initializeCVs() {
   let cvs = loadAllCVs();
   if (!cvs || Object.keys(cvs).length === 0) {
-    // Check for legacy single-CV storage
     try {
       const legacy = localStorage.getItem('resume-builder-data');
       if (legacy) {
         const parsed = JSON.parse(legacy);
-        const legacyData = parsed.resumeData || DEFAULT_DATA;
-        const legacyTemplate = parsed.template || 'modern';
         const id = generateId();
         cvs = {
           [id]: {
-            id,
-            name: 'My First CV',
-            template: legacyTemplate,
+            id, name: 'My First CV',
+            template: parsed.template || 'modern',
             lastEdited: new Date().toISOString(),
-            data: legacyData,
+            data: normalizeData(parsed.resumeData || DEFAULT_DATA),
           },
         };
         localStorage.removeItem('resume-builder-data');
@@ -172,19 +212,13 @@ export function initializeCVs() {
         setLastActiveId(id);
         return cvs;
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
 
-    // No legacy data — create default
     const id = generateId();
     cvs = {
       [id]: {
-        id,
-        name: 'My First CV',
-        template: 'modern',
-        lastEdited: new Date().toISOString(),
-        data: DEFAULT_DATA,
+        id, name: 'My First CV', template: 'modern',
+        lastEdited: new Date().toISOString(), data: DEFAULT_DATA,
       },
     };
     saveAllCVs(cvs);
@@ -209,9 +243,7 @@ export function duplicateCV(id) {
   if (!source) return null;
   const newId = generateId();
   const copy = {
-    ...source,
-    id: newId,
-    name: source.name + ' (copy)',
+    ...source, id: newId, name: source.name + ' (copy)',
     lastEdited: new Date().toISOString(),
     data: JSON.parse(JSON.stringify(source.data)),
   };
@@ -239,203 +271,46 @@ export function deleteCV(id) {
 }
 
 // ── Per-CV editor hook ───────────────────────────────────────────────────────
-
 export function useResumeData(cvId) {
-  const [cv, setCV] = useState(() => {
+  const initial = (() => {
     const cvs = loadAllCVs() || {};
     return cvs[cvId] || null;
-  });
+  })();
 
-  const [data, setData] = useState(() => cv?.data || DEFAULT_DATA);
-  const [template, setTemplateState] = useState(() => cv?.template || 'modern');
-
+  const [data, setDataState] = useState(() => normalizeData(initial?.data || DEFAULT_DATA));
+  const [template, setTemplateState] = useState(() => initial?.template || 'modern');
   const debounceTimer = useRef(null);
 
-  const persistToStorage = useCallback(
-    (newData, newTemplate) => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      debounceTimer.current = setTimeout(() => {
-        const cvs = loadAllCVs() || {};
-        if (!cvs[cvId]) return;
-        cvs[cvId].data = newData;
-        cvs[cvId].template = newTemplate;
-        cvs[cvId].lastEdited = new Date().toISOString();
-        saveAllCVs(cvs);
-      }, 500);
-    },
-    [cvId]
-  );
+  const persist = useCallback((newData, newTemplate) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      const cvs = loadAllCVs() || {};
+      if (!cvs[cvId]) return;
+      cvs[cvId].data = newData;
+      cvs[cvId].template = newTemplate;
+      cvs[cvId].lastEdited = new Date().toISOString();
+      saveAllCVs(cvs);
+    }, 500);
+  }, [cvId]);
 
-  useEffect(() => {
-    persistToStorage(data, template);
-  }, [data, template, persistToStorage]);
+  useEffect(() => { persist(data, template); }, [data, template, persist]);
 
-  const setTemplate = useCallback(
-    (t) => {
-      setTemplateState(t);
-    },
-    []
-  );
-
-  // Personal info
-  const updatePersonalInfo = useCallback((field, value) => {
-    setData((prev) => ({ ...prev, personalInfo: { ...prev.personalInfo, [field]: value } }));
+  // Functional or direct update
+  const setData = useCallback((updater) => {
+    setDataState((prev) => (typeof updater === 'function' ? updater(prev) : updater));
   }, []);
 
-  // Summary
-  const updateSummary = useCallback((value) => {
-    setData((prev) => ({ ...prev, summary: value }));
+  const setTemplate = useCallback((t) => setTemplateState(t), []);
+
+  const setTheme = useCallback((patch) => {
+    setDataState((prev) => ({ ...prev, theme: { ...prev.theme, ...patch } }));
   }, []);
 
-  // Experience
-  const addExperience = useCallback(() => {
-    setData((prev) => ({
-      ...prev,
-      experience: [
-        ...prev.experience,
-        {
-          id: generateItemId(),
-          company: '',
-          role: '',
-          startDate: '',
-          endDate: '',
-          description: '',
-          bullets: [''],
-        },
-      ],
-    }));
-  }, []);
-
-  const updateExperience = useCallback((id, field, value) => {
-    setData((prev) => ({
-      ...prev,
-      experience: prev.experience.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
-    }));
-  }, []);
-
-  const removeExperience = useCallback((id) => {
-    setData((prev) => ({ ...prev, experience: prev.experience.filter((e) => e.id !== id) }));
-  }, []);
-
-  const addBullet = useCallback((expId) => {
-    setData((prev) => ({
-      ...prev,
-      experience: prev.experience.map((e) =>
-        e.id === expId ? { ...e, bullets: [...e.bullets, ''] } : e
-      ),
-    }));
-  }, []);
-
-  const updateBullet = useCallback((expId, index, value) => {
-    setData((prev) => ({
-      ...prev,
-      experience: prev.experience.map((e) => {
-        if (e.id !== expId) return e;
-        const bullets = [...e.bullets];
-        bullets[index] = value;
-        return { ...e, bullets };
-      }),
-    }));
-  }, []);
-
-  const removeBullet = useCallback((expId, index) => {
-    setData((prev) => ({
-      ...prev,
-      experience: prev.experience.map((e) => {
-        if (e.id !== expId) return e;
-        const bullets = e.bullets.filter((_, i) => i !== index);
-        return { ...e, bullets: bullets.length ? bullets : [''] };
-      }),
-    }));
-  }, []);
-
-  // Education
-  const addEducation = useCallback(() => {
-    setData((prev) => ({
-      ...prev,
-      education: [
-        ...prev.education,
-        {
-          id: generateItemId(),
-          school: '',
-          degree: '',
-          field: '',
-          startDate: '',
-          endDate: '',
-          gpa: '',
-        },
-      ],
-    }));
-  }, []);
-
-  const updateEducation = useCallback((id, field, value) => {
-    setData((prev) => ({
-      ...prev,
-      education: prev.education.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
-    }));
-  }, []);
-
-  const removeEducation = useCallback((id) => {
-    setData((prev) => ({ ...prev, education: prev.education.filter((e) => e.id !== id) }));
-  }, []);
-
-  // Skills
-  const updateSkills = useCallback((value) => {
-    setData((prev) => ({ ...prev, skills: value }));
-  }, []);
-
-  // Projects
-  const addProject = useCallback(() => {
-    setData((prev) => ({
-      ...prev,
-      projects: [
-        ...(prev.projects || []),
-        { id: generateItemId(), name: '', description: '', link: '' },
-      ],
-    }));
-  }, []);
-
-  const updateProject = useCallback((id, field, value) => {
-    setData((prev) => ({
-      ...prev,
-      projects: (prev.projects || []).map((p) => (p.id === id ? { ...p, [field]: value } : p)),
-    }));
-  }, []);
-
-  const removeProject = useCallback((id) => {
-    setData((prev) => ({
-      ...prev,
-      projects: (prev.projects || []).filter((p) => p.id !== id),
-    }));
-  }, []);
-
-  // Clear all
   const clearAll = useCallback(() => {
-    if (window.confirm('Are you sure you want to clear all resume data?')) {
-      setData(DEFAULT_DATA);
-      setTemplateState('modern');
+    if (window.confirm('Clear all resume content? This cannot be undone.')) {
+      setDataState(normalizeData(BLANK_DATA));
     }
   }, []);
 
-  return {
-    data,
-    template,
-    setTemplate,
-    updatePersonalInfo,
-    updateSummary,
-    addExperience,
-    updateExperience,
-    removeExperience,
-    addBullet,
-    updateBullet,
-    removeBullet,
-    addEducation,
-    updateEducation,
-    removeEducation,
-    updateSkills,
-    addProject,
-    updateProject,
-    removeProject,
-    clearAll,
-  };
+  return { data, setData, template, setTemplate, setTheme, clearAll };
 }

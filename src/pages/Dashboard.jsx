@@ -12,13 +12,12 @@ import {
 } from '../hooks/useResumeData';
 import { useAuth } from '../context/AuthContext';
 import { useCloudSync } from '../hooks/useCloudSync';
+import { TEMPLATES } from '../resume/templates';
 import '../styles/dashboard.css';
 
-const TEMPLATE_META = {
-  modern:  { label: 'Modern',  color: '#1a3a5c' },
-  classic: { label: 'Classic', color: '#4b5563' },
-  minimal: { label: 'Minimal', color: '#00b894' },
-};
+const TEMPLATE_META = Object.fromEntries(
+  Object.entries(TEMPLATES).map(([id, t]) => [id, { label: t.label, color: t.accent }])
+);
 
 function relativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime();
